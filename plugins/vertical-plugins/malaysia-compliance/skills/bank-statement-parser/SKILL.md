@@ -7,55 +7,74 @@ description: Parser for Malaysian bank statement CSV/XLSX files from major banks
 
 Supports CSV/XLSX import from major Malaysian banks for transaction extraction and reconciliation.
 
-⚠️ **CURRENT STATUS: PLACEHOLDER IMPLEMENTATION** ⚠️
-This skill provides the framework for bank statement parsing but requires additional development for production use.
+⚠️ **CURRENT STATUS: PARTIALLY IMPLEMENTED** ⚠️
+This skill provides a working CSV parser for Maybank statements with framework for additional banks.
+
+## ✅ Implemented
+
+- [x] Maybank CSV format parser
+- [x] Data validation and error handling
+- [x] Currency and date normalization
+- [x] Standard transaction schema
+- [x] CLI interface for testing
+- [x] Unit tests for sample data
 
 ## TODO: Implementation Required
 
-- [ ] Maybank CSV format parser
 - [ ] CIMB CSV format parser
 - [ ] Public Bank CSV format parser
 - [ ] RHB CSV format parser
 - [ ] Hong Leong Bank CSV format parser
 - [ ] XLSX format support for all banks
-- [ ] Data validation and error handling
-- [ ] Currency and date normalization
+- [ ] Automatic bank format detection
+- [ ] Enhanced error recovery
 
-## Current Capabilities (Placeholder)
+## Current Capabilities
 
-- Framework for bank-specific parsers
-- Sample data structure definitions
-- Format detection logic outline
-- Data normalization utilities
+- ✅ **Maybank CSV parsing**: Full support for Maybank CSV format
+- ✅ **Standard schema**: Normalized transaction output with confidence scores
+- ✅ **Error handling**: Robust parsing with warnings for problematic rows
+- ✅ **CLI tool**: Command-line interface for testing and validation
+- ✅ **Unit tests**: Comprehensive test coverage for sample data
+- ✅ **Manual verification**: All outputs include human review requirements
 
-## Supported Bank Formats (Planned)
+## Supported Bank Formats
 
 | Bank | CSV Support | XLSX Support | Notes |
 |------|-------------|--------------|-------|
-| Maybank | ✅ Planned | ✅ Planned | Most common format |
-| CIMB | ✅ Planned | ✅ Planned | Multiple variants |
-| Public Bank | ✅ Planned | ✅ Planned | Standard format |
-| RHB | ✅ Planned | ✅ Planned | Standard format |
-| Hong Leong | ✅ Planned | ✅ Planned | Standard format |
+| Maybank | ✅ Implemented | ❌ Planned | Most common format |
+| CIMB | ❌ Planned | ❌ Planned | Multiple variants |
+| Public Bank | ❌ Planned | ❌ Planned | Standard format |
+| RHB | ❌ Planned | ❌ Planned | Standard format |
+| Hong Leong | ❌ Planned | ❌ Planned | Standard format |
 
 ## Data Extraction
 
-Expected output structure:
+Standard transaction schema output:
 ```json
 {
   "bank_name": "Maybank",
-  "account_number": "****1234",
   "statement_period": {
-    "start_date": "2024-01-01",
-    "end_date": "2024-01-31"
+    "start": "2024-01-01",
+    "end": "2024-01-31"
   },
+  "currency": "MYR",
+  "confidence": 0.9,
+  "warnings": [],
+  "transaction_count": 10,
   "transactions": [
     {
       "date": "2024-01-15",
       "description": "Payment to supplier",
+      "debit": 1000.00,
+      "credit": null,
       "amount": -1000.00,
+      "direction": "debit",
       "balance": 5000.00,
-      "reference": "INV001"
+      "currency": "MYR",
+      "source_bank": "Maybank",
+      "confidence": 0.9,
+      "warnings": []
     }
   ]
 }
