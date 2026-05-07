@@ -17,6 +17,7 @@
 
 ### Next Small Tasks 🔄
 - [ ] Build monthly expense summary reports (JSON/CSV/Markdown)
+- [x] Build monthly expense summary reports (JSON/CSV/Markdown)
 - [ ] Add receipt CLI (`categorize`, `summarize`, `validate`)
 - [ ] Add larger anonymized Maybank fixture variants for high-volume testing
 - [ ] Add deterministic snapshot tests for Markdown and CSV reports

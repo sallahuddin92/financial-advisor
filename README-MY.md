@@ -43,6 +43,8 @@ This repository contains the foundation implementation of Malaysian Financial Se
 - JSON/manual receipt input
 - Rule-based categorization (transparent keyword rules)
 - Batch categorization with duplicate candidate detection
+- Monthly SME expense summary generation
+- Monthly exports: JSON, CSV, Markdown
 - Human-review-required warnings for all categorized outputs
 
 ### Quick Commands

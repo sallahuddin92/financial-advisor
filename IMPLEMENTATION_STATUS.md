@@ -17,6 +17,7 @@
 - ✅ Quality gates: verify script + CI workflow
 - ✅ Receipt ingestion lane started with schema + validation foundation (`malaysia_fsi.receipts.schema`)
 - ✅ Receipt categorization lane expanded with rule-based category mapping and duplicate detection
+- ✅ Monthly SME expense summary module with JSON/CSV/Markdown exporters
 - 🚫 No MyInvois/SSM/JPN/BNM/CTOS/Bursa/bank API integrations
 - ⚠️ Human review required for all outputs
 
