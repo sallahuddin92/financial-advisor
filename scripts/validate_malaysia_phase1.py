@@ -5,7 +5,6 @@ Validates the Malaysia FSI adaptation foundation implementation
 """
 
 import json
-import os
 import sys
 import yaml
 from pathlib import Path
@@ -70,7 +69,7 @@ def check_no_false_claims(filepath):
 
 def main():
     """Main validation function"""
-    base_path = Path('/Users/sallahuddin/financial-services')
+    base_path = Path(__file__).resolve().parent.parent
     checks = []
 
     # 1. Check all plugin.json files are valid JSON
