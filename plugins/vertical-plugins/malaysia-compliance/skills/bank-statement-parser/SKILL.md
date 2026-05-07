@@ -16,8 +16,11 @@ This skill provides a working CSV parser for Maybank statements with framework f
 - [x] Data validation and error handling
 - [x] Currency and date normalization
 - [x] Standard transaction schema
+- [x] Invoice matching system
 - [x] CLI interface for testing
+- [x] CLI interface for invoice matching
 - [x] Unit tests for sample data
+- [x] Unit tests for invoice matching
 
 ## TODO: Implementation Required
 
@@ -28,14 +31,16 @@ This skill provides a working CSV parser for Maybank statements with framework f
 - [ ] XLSX format support for all banks
 - [ ] Automatic bank format detection
 - [ ] Enhanced error recovery
+- [ ] Advanced matching algorithms
 
 ## Current Capabilities
 
 - ✅ **Maybank CSV parsing**: Full support for Maybank CSV format
 - ✅ **Standard schema**: Normalized transaction output with confidence scores
+- ✅ **Invoice matching**: Match transactions to invoice JSON files using amount, date, and keyword analysis
 - ✅ **Error handling**: Robust parsing with warnings for problematic rows
-- ✅ **CLI tool**: Command-line interface for testing and validation
-- ✅ **Unit tests**: Comprehensive test coverage for sample data
+- ✅ **CLI tools**: Command-line interfaces for parsing and matching validation
+- ✅ **Unit tests**: Comprehensive test coverage for parsing and matching (28 tests)
 - ✅ **Manual verification**: All outputs include human review requirements
 
 ## Supported Bank Formats
@@ -82,10 +87,19 @@ Standard transaction schema output:
 
 ## Reconciliation Support
 
-- Transaction matching algorithms
-- Variance detection
-- Missing transaction identification
-- Duplicate detection
+- **Invoice matching**: Match bank transactions to invoice data using:
+  - Amount comparison with tolerance
+  - Date proximity analysis
+  - Keyword similarity (supplier/customer names)
+  - Invoice number detection
+- **Match status classification**:
+  - ✅ matched: High confidence match
+  - 🤔 possible_match: Medium confidence match
+  - ❌ unmatched: No suitable match found
+  - 💰 overpaid: Transaction amount exceeds invoice
+  - 💸 underpaid: Transaction amount below invoice
+- **Confidence scoring**: 0.0 to 1.0 confidence for each match
+- **Warning system**: Identifies potential issues for manual review
 
 ⚠️ **HUMAN REVIEW REQUIRED** ⚠️
 All parsed data must be verified against original bank statements.
