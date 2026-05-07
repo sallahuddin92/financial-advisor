@@ -1,0 +1,11 @@
+{
+  "receipt_id": "RCP-UTIL-001",
+  "merchant_name": "TNB ONLINE PAYMENT",
+  "receipt_date": "2024-03-12",
+  "total_amount": "320.10",
+  "currency": "MYR",
+  "payment_method": "bank-transfer",
+  "line_items": [
+    {"description": "Electricity bill", "total": "320.10"}
+  ]
+}
