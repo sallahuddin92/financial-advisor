@@ -30,3 +30,11 @@
 - No PDF/image parsing yet.
 - No automatic external verification.
 - Human review required for every output.
+
+## CLI
+
+```bash
+python3 -m malaysia_fsi.receipts.cli categorize test-fixtures/receipts --json
+python3 -m malaysia_fsi.receipts.cli summarize test-fixtures/receipts --format md --output /tmp/monthly-receipts.md
+python3 -m malaysia_fsi.receipts.cli validate --receipt test-fixtures/receipts/grocery-receipt.json --json
+```

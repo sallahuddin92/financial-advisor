@@ -665,6 +665,35 @@ class TestInvoiceMatcher:
         report = matcher.build_reconciliation_report(statement, results, invoices)
         assert report["total_matched_amount"] == 0.6
 
+    def test_unmatched_transaction_includes_expense_hint(self):
+        """Test unmatched reconciliation outputs category suggestion hints."""
+        matcher = InvoiceMatcher()
+        statement = BankStatement(
+            bank_name="Maybank",
+            transactions=[
+                Transaction(
+                    date=date(2024, 3, 10),
+                    description="MYDIN SEREMBAN",
+                    debit=150.0,
+                    source_bank="Maybank",
+                )
+            ],
+            statement_period_start=date(2024, 3, 1),
+            statement_period_end=date(2024, 3, 31),
+        )
+        no_match = MatchResult(
+            "unmatched",
+            0.0,
+            [{"code": "UNMATCHED_TRANSACTION", "message": "No matching invoice found"}],
+        )
+        no_match.matched_transaction = statement.transactions[0]
+
+        report = matcher.build_reconciliation_report(statement, [no_match], invoices=[])
+        assert len(report["unmatched_transaction_hints"]) == 1
+        hint = report["unmatched_transaction_hints"][0]
+        assert hint["suggested_expense_category"] == "FOOD_BUSINESS_RAW_MATERIAL"
+        assert "do not auto-confirm accounting treatment" in hint["notes"].lower()
+
     def test_report_exporters_json_csv_markdown(self):
         """Test reconciliation report exporters for JSON/CSV/Markdown outputs."""
         report = {

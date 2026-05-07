@@ -1,6 +1,8 @@
 """Tests for receipt schema and categorization pipeline."""
 
 from pathlib import Path
+import subprocess
+import sys
 
 from malaysia_fsi.receipts.categorizer import (
     batch_categorize_receipts,
@@ -91,3 +93,65 @@ def test_malformed_receipt_fixture_stays_review_required():
     result = categorize_receipt(receipts[0])
     assert result.human_review_required is True
     assert "INVALID_RECEIPT_ID" in warning_codes(result.warnings)
+
+
+def test_receipt_cli_categorize_json_output():
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "malaysia_fsi.receipts.cli",
+            "categorize",
+            str(FIXTURES),
+            "--json",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "\"human_review_required\": true" in proc.stdout.lower()
+
+
+def test_receipt_cli_summarize_markdown_output_file():
+    output_path = Path("/tmp/receipt-summary-test.md")
+    output_path.unlink(missing_ok=True)
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "malaysia_fsi.receipts.cli",
+            "summarize",
+            str(FIXTURES),
+            "--format",
+            "md",
+            "--output",
+            str(output_path),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert output_path.exists()
+    assert "HUMAN REVIEW REQUIRED" in output_path.read_text()
+
+
+def test_receipt_cli_validate_json_output():
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "malaysia_fsi.receipts.cli",
+            "validate",
+            "--receipt",
+            str(FIXTURES / "grocery-receipt.json"),
+            str(FIXTURES / "malformed-receipt.json"),
+            "--json",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "\"human_review_required\": true" in proc.stdout.lower()

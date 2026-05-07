@@ -23,3 +23,4 @@
 - Reporting is advisory only.
 - No regulatory/tax filing submission.
 - **HUMAN REVIEW REQUIRED** before accountant use.
+- Reconciliation integration adds unmatched transaction category hints for analyst review only.

@@ -46,6 +46,10 @@ This repository contains the foundation implementation of Malaysian Financial Se
 - Monthly SME expense summary generation
 - Monthly exports: JSON, CSV, Markdown
 - Human-review-required warnings for all categorized outputs
+- Receipt CLI:
+  - `python3 -m malaysia_fsi.receipts.cli categorize ...`
+  - `python3 -m malaysia_fsi.receipts.cli summarize ...`
+  - `python3 -m malaysia_fsi.receipts.cli validate ...`
 
 ### Quick Commands
 

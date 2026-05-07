@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Tuple
 
 from .report import validate_reconciliation_report
 from .schema import BankStatement, Transaction, warning
+from malaysia_fsi.receipts.categorizer import suggest_category_for_text
 
 
 class MatchResult:
@@ -365,6 +366,7 @@ class InvoiceMatcher:
 
         matched_invoice_keys = set()
         invoice_totals_by_key = {}
+        unmatched_transaction_hints = []
 
         for idx, invoice in enumerate(invoices):
             invoice_number = invoice.get("invoice_number")
@@ -389,6 +391,20 @@ class InvoiceMatcher:
                                 break
 
             warnings.extend(result.warnings or [])
+
+            if result.status == "unmatched" and result.matched_transaction:
+                suggested_category, confidence, category_warnings = suggest_category_for_text(
+                    result.matched_transaction.description
+                )
+                hint = {
+                    "transaction_date": result.matched_transaction.date.isoformat(),
+                    "transaction_description": result.matched_transaction.description,
+                    "suggested_expense_category": suggested_category,
+                    "confidence_score": round(confidence, 3),
+                    "notes": "Advisory only; do not auto-confirm accounting treatment.",
+                    "warnings": category_warnings,
+                }
+                unmatched_transaction_hints.append(hint)
 
         unmatched_invoice_keys = set(invoice_totals_by_key.keys()) - matched_invoice_keys
         total_unmatched_invoice_amount = sum(
@@ -431,6 +447,7 @@ class InvoiceMatcher:
             "total_matched_amount": float(self._money(total_matched_amount)),
             "total_unmatched_invoice_amount": float(self._money(total_unmatched_invoice_amount)),
             "warnings": unique_warnings,
+            "unmatched_transaction_hints": unmatched_transaction_hints,
             "human_review_required": True,
         }
         report_warnings = self.validate_reconciliation_report(report)
