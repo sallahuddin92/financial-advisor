@@ -27,6 +27,30 @@ This repository contains the foundation implementation of Malaysian Financial Se
 - ✅ Reference information for Malaysian regulations
 - ✅ Template for future development
 
+## Offline Reconciliation MVP (Current)
+
+- ✅ Implemented real parsing format: **Maybank CSV only**
+- ✅ Offline invoice matching, reconciliation summaries, and JSON/CSV/Markdown report outputs
+- ✅ Unified CLI entrypoint: `python3 -m malaysia_fsi.bank_statement.cli`
+- 🚫 No MyInvois submission
+- 🚫 No SSM/JPN/BNM verification
+- 🚫 No live bank/government/credit bureau/market data API integrations
+- ⚠️ **HUMAN REVIEW REQUIRED** for every output and decision
+
+### Quick Commands
+
+```bash
+# Parse statement
+python3 -m malaysia_fsi.bank_statement.cli parse test-fixtures/sample-data/maybank-valid.csv --json
+
+# Match invoices and export markdown report
+python3 -m malaysia_fsi.bank_statement.cli match \
+  test-fixtures/sample-data/maybank-valid.csv \
+  test-fixtures/sample-data/invoices-exact-match \
+  --format md \
+  --output /tmp/reconciliation-report.md
+```
+
 ## 🏗️ Architecture Overview
 
 ```

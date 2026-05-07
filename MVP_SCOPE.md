@@ -12,9 +12,9 @@ Create a functional foundation for Malaysian financial services workflows that:
 ## In Scope ✅
 
 ### Core Workflows
-- [ ] **Document Upload & Processing**: PDF, CSV, XLSX file handling
-- [ ] **Bank Statement Import**: Manual upload and parsing of Malaysian bank formats
-- [ ] **Invoice Processing**: Manual upload and e-Invoice compliance checking
+- [x] **Document Upload & Processing**: Offline CSV + JSON handling for reconciliation workflows
+- [x] **Bank Statement Import**: Manual upload and parsing for Maybank CSV
+- [x] **Invoice Processing**: Manual upload and offline invoice matching/reporting
 - [ ] **KYC Document Processing**: Manual upload and checklist generation
 - [ ] **Takaful Document Q&A**: PDF analysis and information extraction
 - [ ] **Compliance Checklists**: SST, e-Invoice, KYC verification templates
@@ -24,6 +24,10 @@ Create a functional foundation for Malaysian financial services workflows that:
 - [ ] **Sample Data**: Test fixtures for development and validation
 - [ ] **Reference Materials**: Malaysian compliance guidelines and requirements
 - [ ] **Static Lists**: Malaysian bank formats, tax codes, document types
+
+### Implemented Bank Coverage
+- [x] **Maybank CSV**: Implemented
+- [ ] **CIMB/Public Bank/RHB/Hong Leong**: Placeholder architecture only (disabled until anonymized fixtures are available)
 
 ### Output Types
 - [ ] **Reconciliation Reports**: Bank vs invoice matching with variance flags
@@ -69,6 +73,7 @@ Create a functional foundation for Malaysian financial services workflows that:
 - ✅ Data extraction utilities
 - ✅ Compliance checklist generators
 - ✅ Report formatting tools
+- ✅ Offline reconciliation JSON/CSV/Markdown export
 - ✅ User workflow guides
 - ✅ Manual verification procedures
 

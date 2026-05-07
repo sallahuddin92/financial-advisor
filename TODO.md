@@ -1,98 +1,35 @@
 # Implementation TODO List
 
-## Phase 1: Foundation (Current)
+## Current State (Offline Reconciliation MVP)
 
 ### Completed ✅
-- [x] Create folder structure for Malaysia agents
-- [x] Copy and rename agent manifests
-- [x] Create Malaysia-adapted agent prompts
-- [x] Create placeholder skills with TODO sections
-- [x] Add guardrails and disclaimers
+- [x] Importable package: `malaysia_fsi.bank_statement`
+- [x] Maybank CSV parsing (offline)
+- [x] Invoice matcher and reconciliation summaries
+- [x] Multi-bank parser architecture with disabled placeholders
+- [x] Structured warning codes and validation hardening
+- [x] CLI (`parse`, `match`, `validate`) with JSON output and safe failure modes
+- [x] Report exporters: JSON, CSV, Markdown
+- [x] Expanded anonymized fixture suite
+- [x] Verification script and CI workflow
 
-### In Progress 🔄
-- [ ] Create sample test fixtures
-- [ ] Add README documentation
-- [ ] Create implementation status tracking
+### Next Small Tasks 🔄
+- [ ] Add larger anonymized Maybank fixture variants for high-volume testing
+- [ ] Add deterministic snapshot tests for Markdown and CSV reports
+- [ ] Add changelog/release-note template for offline MVP releases
+- [ ] Add tighter CLI operator runbook for strict-mode usage
 
-## Phase 2: Core Skills Implementation
+## Explicitly Out of Scope (Current)
 
-### Bank Statement Parser
-- [ ] Maybank CSV format implementation
-- [ ] CIMB CSV format implementation
-- [ ] Public Bank CSV format implementation
-- [ ] RHB CSV format implementation
-- [ ] Hong Leong Bank CSV format implementation
-- [ ] XLSX format support
-- [ ] Data validation and error handling
-
-### MyInvois API Integration
-- [ ] Sandbox API connection setup
-- [ ] Authentication implementation
-- [ ] Request/response handling
-- [ ] Error handling and rate limiting
-- [ ] Production API migration path
-
-### SST Compliance
-- [ ] Current SST rate implementation
-- [ ] e-Invoice field validation
-- [ ] Tax code mapping
-- [ ] Calculation verification
-- [ ] Exception handling
-
-### Document Parsing
-- [ ] SSM Form 24 parser
-- [ ] SSM Form 49 parser
-- [ ] Business certificate parser
-- [ ] OCR integration for scanned docs
-- [ ] Data validation logic
-
-## Phase 3: Integration & Testing
-
-### Test Cases
-- [ ] Bank statement import tests
-- [ ] Invoice matching tests
-- [ ] KYC document processing tests
-- [ ] Takaful document Q&A tests
-- [ ] Compliance checklist tests
-
-### Integration
-- [ ] Agent-skill integration testing
-- [ ] End-to-end workflow validation
-- [ ] Error handling verification
-- [ ] Performance testing
-
-## Phase 4: Production Readiness
-
-### Security & Compliance
-- [ ] Data protection implementation
-- [ ] Audit logging
-- [ ] Access controls
-- [ ] Compliance validation
-
-### Documentation
-- [ ] User guides
-- [ ] API documentation
-- [ ] Deployment guides
-- [ ] Troubleshooting guides
-
-## Future Enhancements
-
-### Optional Integrations
-- [ ] SSM API integration (when available)
-- [ ] Additional bank formats
-- [ ] Enhanced OCR capabilities
-- [ ] Real-time compliance checking
-
-### Advanced Features
-- [ ] Machine learning for document classification
-- [ ] Automated anomaly detection
-- [ ] Advanced reporting dashboards
-- [ ] Multi-language support
+- [ ] MyInvois API integration
+- [ ] SSM/JPN/BNM verification integrations
+- [ ] CTOS/Bursa/bank API integrations
+- [ ] Automated compliance determinations
+- [ ] Regulatory/tax/accounting decision automation
 
 ## Important Notes
 
-- All implementations must include "HUMAN REVIEW REQUIRED" disclaimers
-- No automated decision-making or approvals
-- Focus on assistance and verification workflows
-- Prioritize manual verification over automation
-- Maintain compliance with Malaysian regulations
+- All outputs must include **HUMAN REVIEW REQUIRED** posture.
+- This module is offline reconciliation assistance only.
+- Maybank CSV is the only implemented real bank format.
+- Other banks remain placeholders until real anonymized fixtures are available.

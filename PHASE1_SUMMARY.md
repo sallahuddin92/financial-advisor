@@ -171,3 +171,14 @@ The foundation is now complete and ready for:
 ---
 
 **Phase 1 Complete**: Foundation established for Malaysian Financial Services adaptation with realistic scope, comprehensive documentation, and clear guardrails for safe development.
+
+---
+
+## Update Note (May 8, 2026)
+
+Phase 1 foundation remains intact. The project now also includes later-phase offline reconciliation MVP work:
+- importable `malaysia_fsi` package
+- hardened parser/matcher/reporting flows
+- unified CLI and quality gates
+
+Regulated and live integrations remain intentionally unimplemented.

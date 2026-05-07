@@ -2,6 +2,22 @@
 
 ## Current Status: Phase 2 Implementation 🚀
 
+### Offline Reconciliation MVP Snapshot (May 8, 2026)
+
+- ✅ Offline SME reconciliation module packaged as `malaysia_fsi`
+- ✅ Maybank CSV parser implemented and tested
+- ✅ Multi-bank architecture in place with disabled placeholders:
+  - CIMB
+  - Public Bank
+  - RHB
+  - Hong Leong Bank
+- ✅ Invoice matching with structured warning codes
+- ✅ Reconciliation report exporters: JSON, CSV, Markdown
+- ✅ Production-hardened CLI with parse/match/validate subcommands
+- ✅ Quality gates: verify script + CI workflow
+- 🚫 No MyInvois/SSM/JPN/BNM/CTOS/Bursa/bank API integrations
+- ⚠️ Human review required for all outputs
+
 ### What's Been Created
 
 #### Agent Plugins
@@ -42,7 +58,7 @@
 ✅ **Disabled Bank Placeholders**: CIMB/Public Bank/RHB/Hong Leong classes are present but intentionally disabled
 ✅ **Standard Transaction Schema**: Consistent data structure with confidence scores and warnings
 ✅ **CLI Interface**: Command-line tool for testing and validation
-✅ **Unit Tests**: Comprehensive test coverage for parsing and matching workflows
+✅ **Unit Tests**: Comprehensive parser/matcher/CLI/report coverage
 ✅ **Manual Workflows**: Support for manual document upload and verification
 ✅ **Reference Information**: Malaysian compliance guidelines and requirements
 ✅ **Guardrails**: Comprehensive "human review required" disclaimers
@@ -113,6 +129,8 @@ The bank statement parser now provides working Maybank CSV parsing capability wi
 - Match transactions to invoice JSON files using multiple criteria
 - Generate confidence scores and warnings for manual review
 - Provide detailed matching reports with human review disclaimers
+- Export reconciliation outputs in JSON/CSV/Markdown
+- Run through `python3 scripts/verify_malaysia_fsi.py` for repeatable verification
 
 All components continue to include proper guardrails and human review requirements.
 
