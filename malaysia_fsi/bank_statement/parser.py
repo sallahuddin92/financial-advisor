@@ -6,7 +6,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Callable, List, Optional
 
-from .schema import BankStatement, Transaction
+from .schema import BankStatement, Transaction, warning
 
 PLACEHOLDER_NOT_IMPLEMENTED_MESSAGE = "Real anonymized fixture required before enabling this bank format."
 
@@ -74,13 +74,23 @@ class MaybankCSVParser(BaseBankParser):
                 actual_columns = reader.fieldnames or []
                 missing_columns = [col for col in expected_columns if col not in actual_columns]
                 if missing_columns:
-                    warnings.append(f"Missing expected columns: {missing_columns}")
+                    warnings.append(
+                        warning(
+                            "MISSING_COLUMN",
+                            f"Missing expected columns: {missing_columns}",
+                        )
+                    )
 
                 for row_num, row in enumerate(reader, start=2):
                     try:
                         date_obj = self.parse_date(row.get("Date", ""))
                         if not date_obj:
-                            warnings.append(f"Row {row_num}: Could not parse date '{row.get('Date', '')}'")
+                            warnings.append(
+                                warning(
+                                    "INVALID_DATE",
+                                    f"Row {row_num}: Could not parse date '{row.get('Date', '')}'",
+                                )
+                            )
                             continue
 
                         raw_debit = (row.get("Debit", "") or "").strip()
@@ -92,25 +102,46 @@ class MaybankCSVParser(BaseBankParser):
                         balance = self.normalize_amount(raw_balance)
 
                         if raw_debit and debit is None:
-                            warnings.append(f"Row {row_num}: Non-numeric debit '{raw_debit}'")
+                            warnings.append(
+                                warning(
+                                    "INVALID_AMOUNT",
+                                    f"Row {row_num}: Non-numeric debit '{raw_debit}'",
+                                )
+                            )
                         if raw_credit and credit is None:
-                            warnings.append(f"Row {row_num}: Non-numeric credit '{raw_credit}'")
+                            warnings.append(
+                                warning(
+                                    "INVALID_AMOUNT",
+                                    f"Row {row_num}: Non-numeric credit '{raw_credit}'",
+                                )
+                            )
                         if raw_balance and balance is None:
-                            warnings.append(f"Row {row_num}: Non-numeric balance '{raw_balance}'")
+                            warnings.append(
+                                warning(
+                                    "INVALID_AMOUNT",
+                                    f"Row {row_num}: Non-numeric balance '{raw_balance}'",
+                                )
+                            )
 
                         has_debit = debit is not None and debit > 0
                         has_credit = credit is not None and credit > 0
 
                         if has_debit and has_credit:
                             warnings.append(
-                                f"Row {row_num}: Both debit and credit are populated; treating row as debit"
+                                warning(
+                                    "BOTH_DEBIT_CREDIT_PRESENT",
+                                    f"Row {row_num}: Both debit and credit are populated; treating row as debit",
+                                )
                             )
                             credit = None
                             has_credit = False
 
                         if not has_debit and not has_credit:
                             warnings.append(
-                                f"Row {row_num}: Missing amount (both debit and credit are empty or invalid)"
+                                warning(
+                                    "INVALID_AMOUNT",
+                                    f"Row {row_num}: Missing amount (both debit and credit are empty or invalid)",
+                                )
                             )
                             continue
 
@@ -127,11 +158,13 @@ class MaybankCSVParser(BaseBankParser):
                         transactions.append(transaction)
 
                     except Exception as exc:
-                        warnings.append(f"Row {row_num}: Error parsing row - {str(exc)}")
+                        warnings.append(
+                            warning("ROW_PARSE_ERROR", f"Row {row_num}: Error parsing row - {str(exc)}")
+                        )
                         continue
 
         except Exception as exc:
-            warnings.append(f"Error reading file: {str(exc)}")
+            warnings.append(warning("FILE_READ_ERROR", f"Error reading file: {str(exc)}"))
 
         if transactions:
             statement_start = min(t.date for t in transactions)
@@ -139,7 +172,14 @@ class MaybankCSVParser(BaseBankParser):
         else:
             statement_start = None
             statement_end = None
-            warnings.append("No transactions found in file")
+            warnings.append(warning("NO_TRANSACTIONS", "No transactions found in file"))
+
+        warnings.append(
+            warning(
+                "HUMAN_REVIEW_REQUIRED",
+                "Parsed statement output requires human review before financial decisions.",
+            )
+        )
 
         return BankStatement(
             bank_name=self.bank_name,

@@ -5,6 +5,27 @@ from typing import Any, Dict
 from .schema import BankStatement
 
 
+def validate_reconciliation_report(report: Dict[str, Any]) -> list:
+    """Validate required report fields for safe downstream use."""
+    required_keys = [
+        "statement_bank",
+        "statement_period",
+        "total_transactions",
+        "total_invoices",
+        "matched_count",
+        "possible_match_count",
+        "unmatched_count",
+        "overpaid_count",
+        "underpaid_count",
+        "total_matched_amount",
+        "total_unmatched_invoice_amount",
+        "warnings",
+        "human_review_required",
+    ]
+    missing = [key for key in required_keys if key not in report]
+    return missing
+
+
 def format_transaction_output(statement: BankStatement) -> Dict[str, Any]:
     """Format bank statement data for JSON output."""
     return {

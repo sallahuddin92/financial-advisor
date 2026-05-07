@@ -3,16 +3,18 @@
 import json
 import re
 from datetime import date, timedelta
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
-from .schema import BankStatement, Transaction
+from .report import validate_reconciliation_report
+from .schema import BankStatement, Transaction, warning
 
 
 class MatchResult:
     """Result of invoice matching operation."""
 
-    def __init__(self, status: str, confidence: float, warnings: Optional[List[str]] = None):
+    def __init__(self, status: str, confidence: float, warnings: Optional[List[Dict[str, str]]] = None):
         self.status = status
         self.confidence = confidence
         self.warnings = warnings or []
@@ -28,6 +30,60 @@ class InvoiceMatcher:
     def __init__(self, date_tolerance_days: int = 3, amount_tolerance_percent: float = 0.01):
         self.date_tolerance = timedelta(days=date_tolerance_days)
         self.amount_tolerance = amount_tolerance_percent
+
+    def _to_decimal(self, value: object) -> Decimal:
+        try:
+            return Decimal(str(value))
+        except Exception:
+            return Decimal("0")
+
+    def _money(self, value: object) -> Decimal:
+        return self._to_decimal(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    def validate_invoice(self, invoice: Dict) -> Tuple[bool, List[Dict[str, str]]]:
+        """Validate invoice payload shape and required fields."""
+        warnings = []
+        valid = True
+
+        if not invoice.get("invoice_number"):
+            valid = False
+            warnings.append(warning("MISSING_INVOICE_FIELD", "Invoice is missing 'invoice_number'."))
+
+        if "grand_total" not in invoice:
+            valid = False
+            warnings.append(warning("MISSING_INVOICE_FIELD", "Invoice is missing 'grand_total'."))
+        else:
+            try:
+                Decimal(str(invoice.get("grand_total")))
+            except Exception:
+                valid = False
+                warnings.append(warning("INVALID_AMOUNT", "Invoice grand_total is not numeric."))
+
+        invoice_date_str = invoice.get("date")
+        if invoice_date_str:
+            try:
+                date.fromisoformat(invoice_date_str)
+            except (ValueError, TypeError):
+                warnings.append(warning("INVALID_DATE", "Invoice date is not valid ISO format."))
+
+        supplier_name = invoice.get("supplier", {}).get("name", "")
+        customer_name = invoice.get("customer", {}).get("name", "")
+        if not supplier_name and not customer_name:
+            warnings.append(
+                warning(
+                    "MISSING_COUNTERPARTY",
+                    "Invoice is missing both supplier and customer names.",
+                )
+            )
+
+        return valid, warnings
+
+    def validate_reconciliation_report(self, report: Dict) -> List[Dict[str, str]]:
+        """Validate required reconciliation report fields."""
+        warnings = []
+        for key in validate_reconciliation_report(report):
+            warnings.append(warning("REPORT_VALIDATION_ERROR", f"Missing report field: {key}"))
+        return warnings
 
     def load_invoice(self, invoice_path: Path) -> Optional[Dict]:
         try:
@@ -116,8 +172,15 @@ class InvoiceMatcher:
 
     def match_transaction_to_invoice(self, transaction: Transaction, invoice: Dict) -> MatchResult:
         result = MatchResult("unmatched", 0.0)
+        invoice_valid, invoice_warnings = self.validate_invoice(invoice)
+        result.warnings.extend(invoice_warnings)
+        if not invoice_valid:
+            result.warnings.append(
+                warning("HUMAN_REVIEW_REQUIRED", "Invoice data is invalid and requires manual correction.")
+            )
+            return result
 
-        invoice_amount = invoice.get("grand_total", 0.0)
+        invoice_amount = self._to_decimal(invoice.get("grand_total", 0.0))
         invoice_date_str = invoice.get("date")
         invoice_date = None
         if invoice_date_str:
@@ -130,10 +193,10 @@ class InvoiceMatcher:
         supplier_name = invoice.get("supplier", {}).get("name", "")
         customer_name = invoice.get("customer", {}).get("name", "")
 
-        tx_amount_abs = abs(transaction.amount or 0)
+        tx_amount_abs = self._to_decimal(abs(transaction.amount or 0))
 
         date_score = self.calculate_date_score(transaction.date, invoice_date)
-        amount_score = self.calculate_amount_score(tx_amount_abs, invoice_amount)
+        amount_score = self.calculate_amount_score(float(tx_amount_abs), float(invoice_amount))
         keyword_texts = [supplier_name, customer_name] + [
             item.get("description", "") for item in invoice.get("items", [])
         ]
@@ -145,7 +208,9 @@ class InvoiceMatcher:
         )
 
         amount_difference = tx_amount_abs - invoice_amount
-        amount_difference_percent = abs(amount_difference) / invoice_amount if invoice_amount > 0 else 0
+        amount_difference_percent = (
+            abs(float(amount_difference / invoice_amount)) if invoice_amount > 0 else 0
+        )
 
         if amount_score >= 0.8 and overall_score >= 0.7:
             if amount_difference_percent <= 0.02:
@@ -167,19 +232,21 @@ class InvoiceMatcher:
             result.status = "unmatched"
             result.confidence = overall_score
 
-        result.matched_amount = tx_amount_abs
-        result.expected_amount = invoice_amount
+        result.matched_amount = float(self._money(tx_amount_abs))
+        result.expected_amount = float(self._money(invoice_amount))
         result.matched_transaction = transaction
         result.matched_invoice = invoice
 
         if amount_difference_percent > 0.05:
-            result.warnings.append(f"Amount difference: {amount_difference_percent:.1%}")
+            result.warnings.append(warning("INVALID_AMOUNT", f"Amount difference: {amount_difference_percent:.1%}"))
         elif amount_difference_percent > self.amount_tolerance:
-            result.warnings.append(f"Near amount match: {amount_difference_percent:.1%} difference")
+            result.warnings.append(
+                warning("INVALID_AMOUNT", f"Near amount match: {amount_difference_percent:.1%} difference")
+            )
         if date_score < 0.5:
-            result.warnings.append("Date mismatch beyond tolerance")
+            result.warnings.append(warning("INVALID_DATE", "Date mismatch beyond tolerance"))
         if keyword_score < 0.3:
-            result.warnings.append("Low keyword similarity")
+            result.warnings.append(warning("MISSING_COUNTERPARTY", "Low keyword similarity"))
 
         return result
 
@@ -192,7 +259,13 @@ class InvoiceMatcher:
             if invoice:
                 loaded_invoices.append(invoice)
             else:
-                results.append(MatchResult("unmatched", 0.0, [f"Failed to load invoice: {invoice_path}"]))
+                results.append(
+                    MatchResult(
+                        "unmatched",
+                        0.0,
+                        [warning("INVALID_INVOICE_JSON", f"Failed to load invoice: {invoice_path}")],
+                    )
+                )
 
         for transaction in statement.transactions:
             best_match = None
@@ -211,13 +284,18 @@ class InvoiceMatcher:
             if best_match:
                 if best_score >= 0.5 and (best_score - second_best_score) <= 0.02:
                     best_match.warnings.append(
-                        "Multiple candidate invoices with similar confidence; manual review required"
+                        warning(
+                            "DUPLICATE_CANDIDATE",
+                            "Multiple candidate invoices with similar confidence; manual review required",
+                        )
                     )
                 results.append(best_match)
             else:
                 no_match = MatchResult("unmatched", 0.0)
                 no_match.matched_transaction = transaction
-                no_match.warnings.append("No matching invoice found")
+                no_match.warnings.append(
+                    warning("UNMATCHED_TRANSACTION", "No matching invoice found")
+                )
                 results.append(no_match)
 
         return results
@@ -262,7 +340,7 @@ class InvoiceMatcher:
                 else None,
                 "transaction_amount": result.matched_amount,
                 "expected_amount": result.expected_amount,
-                "difference": result.matched_amount - result.expected_amount,
+                "difference": float(self._money(result.matched_amount - result.expected_amount)),
                 "warnings": result.warnings,
             }
             report["details"].append(detail)
@@ -282,7 +360,7 @@ class InvoiceMatcher:
             "overpaid_count": 0,
             "underpaid_count": 0,
         }
-        total_matched_amount = 0.0
+        total_matched_amount = Decimal("0.00")
         warnings = list(statement.warnings or [])
 
         matched_invoice_keys = set()
@@ -291,7 +369,7 @@ class InvoiceMatcher:
         for idx, invoice in enumerate(invoices):
             invoice_number = invoice.get("invoice_number")
             invoice_key = invoice_number if invoice_number else f"invoice_index_{idx}"
-            invoice_totals_by_key[invoice_key] = float(invoice.get("grand_total", 0.0) or 0.0)
+            invoice_totals_by_key[invoice_key] = self._money(invoice.get("grand_total", 0.0) or 0.0)
 
         for result in results:
             status_key = f"{result.status}_count"
@@ -299,7 +377,7 @@ class InvoiceMatcher:
                 status_counts[status_key] += 1
 
             if result.status in {"matched", "possible_match", "overpaid", "underpaid"}:
-                total_matched_amount += float(result.matched_amount or 0.0)
+                total_matched_amount += self._money(result.matched_amount or 0.0)
                 if result.matched_invoice:
                     invoice_number = result.matched_invoice.get("invoice_number")
                     if invoice_number and invoice_number in invoice_totals_by_key:
@@ -313,9 +391,27 @@ class InvoiceMatcher:
             warnings.extend(result.warnings or [])
 
         unmatched_invoice_keys = set(invoice_totals_by_key.keys()) - matched_invoice_keys
-        total_unmatched_invoice_amount = sum(invoice_totals_by_key[key] for key in unmatched_invoice_keys)
+        total_unmatched_invoice_amount = sum(
+            (invoice_totals_by_key[key] for key in unmatched_invoice_keys),
+            Decimal("0.00"),
+        )
 
-        return {
+        warnings.append(
+            warning(
+                "HUMAN_REVIEW_REQUIRED",
+                "All reconciliation results require human verification before use.",
+            )
+        )
+
+        unique_warnings = []
+        seen = set()
+        for item in warnings:
+            marker = (item.get("code"), item.get("message"))
+            if marker not in seen:
+                seen.add(marker)
+                unique_warnings.append(item)
+
+        report = {
             "statement_bank": statement.bank_name,
             "statement_period": {
                 "start": statement.statement_period_start.isoformat()
@@ -332,8 +428,12 @@ class InvoiceMatcher:
             "unmatched_count": status_counts["unmatched_count"],
             "overpaid_count": status_counts["overpaid_count"],
             "underpaid_count": status_counts["underpaid_count"],
-            "total_matched_amount": round(total_matched_amount, 2),
-            "total_unmatched_invoice_amount": round(total_unmatched_invoice_amount, 2),
-            "warnings": sorted(set(warnings)),
+            "total_matched_amount": float(self._money(total_matched_amount)),
+            "total_unmatched_invoice_amount": float(self._money(total_unmatched_invoice_amount)),
+            "warnings": unique_warnings,
             "human_review_required": True,
         }
+        report_warnings = self.validate_reconciliation_report(report)
+        if report_warnings:
+            report["warnings"].extend(report_warnings)
+        return report

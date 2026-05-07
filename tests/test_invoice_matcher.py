@@ -12,6 +12,10 @@ from malaysia_fsi.bank_statement.schema import BankStatement, Transaction, Trans
 
 EDGE_FIXTURES = Path("test-fixtures/sample-data/invoice-edge-cases")
 
+
+def warning_codes(warnings):
+    return [item.get("code") for item in warnings]
+
 class TestInvoiceMatcher:
     """Test invoice matching functionality"""
 
@@ -205,7 +209,7 @@ class TestInvoiceMatcher:
         # With current logic, this might be "possible_match" due to scoring thresholds
         assert result.status in ["overpaid", "possible_match"]
         assert result.confidence > 0.5
-        assert any("Amount difference" in warning for warning in result.warnings)
+        assert "INVALID_AMOUNT" in warning_codes(result.warnings)
 
     def test_match_transaction_to_invoice_underpaid(self):
         """Test underpaid transaction matching"""
@@ -323,7 +327,7 @@ class TestInvoiceMatcher:
                     description="Unmatched payment",
                     source_bank="Maybank"
                 ),
-                'warnings': ['No matching invoice found']
+                'warnings': [{'code': 'UNMATCHED_TRANSACTION', 'message': 'No matching invoice found'}]
             })
         ]
 
@@ -334,7 +338,7 @@ class TestInvoiceMatcher:
         assert report["unmatched"] == 1
         assert report["average_confidence"] == 0.55
         assert len(report["details"]) == 2
-        assert "No matching invoice found" in report["warnings"]
+        assert any(item["code"] == "UNMATCHED_TRANSACTION" for item in report["warnings"])
 
     def test_duplicate_candidates_produce_ambiguity_warning(self):
         """Test warning when multiple invoices are similarly strong candidates"""
@@ -364,10 +368,7 @@ class TestInvoiceMatcher:
         results = matcher.match_statement_to_invoices(statement, invoice_paths)
 
         assert len(results) == 1
-        assert any(
-            "Multiple candidate invoices with similar confidence" in warning
-            for warning in results[0].warnings
-        )
+        assert "DUPLICATE_CANDIDATE" in warning_codes(results[0].warnings)
 
     def test_near_amount_difference_produces_warning(self):
         """Test warning for near amount matches that exceed strict tolerance"""
@@ -388,7 +389,7 @@ class TestInvoiceMatcher:
 
         result = matcher.match_transaction_to_invoice(transaction, invoice)
 
-        assert any("Near amount match" in warning for warning in result.warnings)
+        assert "INVALID_AMOUNT" in warning_codes(result.warnings)
 
     def test_date_outside_tolerance_produces_warning(self):
         """Test warning when invoice date is far outside matching tolerance"""
@@ -409,7 +410,7 @@ class TestInvoiceMatcher:
 
         result = matcher.match_transaction_to_invoice(transaction, invoice)
 
-        assert any("Date mismatch beyond tolerance" in warning for warning in result.warnings)
+        assert "INVALID_DATE" in warning_codes(result.warnings)
 
     def test_missing_supplier_and_customer_name_produces_warning(self):
         """Test warning when invoice has insufficient party-name context"""
@@ -430,7 +431,7 @@ class TestInvoiceMatcher:
 
         result = matcher.match_transaction_to_invoice(transaction, invoice)
 
-        assert any("Low keyword similarity" in warning for warning in result.warnings)
+        assert "MISSING_COUNTERPARTY" in warning_codes(result.warnings)
 
     def test_build_reconciliation_report_json_summary_totals(self):
         """Test reconciliation JSON summary shape and total calculations"""
@@ -454,7 +455,7 @@ class TestInvoiceMatcher:
             ],
             statement_period_start=date(2024, 1, 1),
             statement_period_end=date(2024, 1, 31),
-            warnings=["Statement-level warning"]
+            warnings=[{"code": "STATEMENT_WARNING", "message": "Statement-level warning"}]
         )
 
         invoice_1 = {
@@ -478,7 +479,11 @@ class TestInvoiceMatcher:
 
         match_1 = matcher.match_transaction_to_invoice(statement.transactions[0], invoice_1)
         match_2 = matcher.match_transaction_to_invoice(statement.transactions[1], invoice_2)
-        no_match = MatchResult("unmatched", 0.1, ["No matching invoice found"])
+        no_match = MatchResult(
+            "unmatched",
+            0.1,
+            [{"code": "UNMATCHED_TRANSACTION", "message": "No matching invoice found"}],
+        )
         no_match.matched_transaction = Transaction(
             date=date(2024, 1, 25),
             description="Bank charge",
@@ -502,7 +507,8 @@ class TestInvoiceMatcher:
         assert report["total_matched_amount"] == 1950.0
         assert report["total_unmatched_invoice_amount"] == 500.0
         assert report["human_review_required"] is True
-        assert "Statement-level warning" in report["warnings"]
+        assert any(item["code"] == "STATEMENT_WARNING" for item in report["warnings"])
+        assert any(item["code"] == "HUMAN_REVIEW_REQUIRED" for item in report["warnings"])
 
     def test_match_cli_json_flag_outputs_reconciliation_json(self):
         """Test legacy match CLI path outputs reconciliation JSON summary."""
@@ -536,3 +542,66 @@ class TestInvoiceMatcher:
         assert payload["total_invoices"] == 1
         assert "human_review_required" in payload
         assert payload["human_review_required"] is True
+        assert any(item["code"] == "HUMAN_REVIEW_REQUIRED" for item in payload["warnings"])
+
+    def test_invalid_invoice_json_produces_structured_warning(self):
+        """Test invalid invoice JSON creates coded warning."""
+        matcher = InvoiceMatcher()
+
+        statement = BankStatement(
+            bank_name="Maybank",
+            transactions=[
+                Transaction(
+                    date=date(2024, 1, 15),
+                    description="Payment",
+                    credit=100.00,
+                    source_bank="Maybank",
+                )
+            ],
+        )
+        invalid_invoice_path = Path("test-fixtures/sample-data/invoice-edge-cases/invalid.json")
+        invalid_invoice_path.write_text("{invalid-json")
+        try:
+            results = matcher.match_statement_to_invoices(statement, [invalid_invoice_path])
+            assert any(
+                item["code"] == "INVALID_INVOICE_JSON"
+                for result in results
+                for item in result.warnings
+            )
+        finally:
+            invalid_invoice_path.unlink(missing_ok=True)
+
+    def test_missing_invoice_fields_warning_codes(self):
+        """Test missing invoice fields return structured warnings with message."""
+        matcher = InvoiceMatcher()
+        transaction = Transaction(
+            date=date(2024, 1, 15),
+            description="Payment without valid invoice fields",
+            credit=100.00,
+            source_bank="Maybank",
+        )
+        invoice = {"date": "2024-01-15"}  # Missing invoice_number and grand_total
+        result = matcher.match_transaction_to_invoice(transaction, invoice)
+        codes = warning_codes(result.warnings)
+        assert "MISSING_INVOICE_FIELD" in codes
+        assert "HUMAN_REVIEW_REQUIRED" in codes
+        assert all("message" in item for item in result.warnings)
+
+    def test_decimal_totals_are_money_safe(self):
+        """Test Decimal-backed totals avoid float rounding surprises."""
+        matcher = InvoiceMatcher()
+        statement = BankStatement(
+            bank_name="Maybank",
+            transactions=[],
+            statement_period_start=date(2024, 1, 1),
+            statement_period_end=date(2024, 1, 31),
+        )
+        results = [
+            MatchResult("matched", 0.9, []),
+            MatchResult("matched", 0.9, []),
+        ]
+        results[0].matched_amount = 0.1 + 0.2
+        results[1].matched_amount = 0.3
+        invoices = [{"invoice_number": "INV-A", "grand_total": 0.3}]
+        report = matcher.build_reconciliation_report(statement, results, invoices)
+        assert report["total_matched_amount"] == 0.6

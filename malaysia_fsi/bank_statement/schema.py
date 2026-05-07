@@ -3,12 +3,17 @@
 from dataclasses import dataclass
 from datetime import date
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 class TransactionDirection(Enum):
     DEBIT = "debit"
     CREDIT = "credit"
+
+
+def warning(code: str, message: str) -> Dict[str, str]:
+    """Create structured warning payload."""
+    return {"code": code, "message": message}
 
 
 @dataclass
@@ -25,7 +30,7 @@ class Transaction:
     currency: str = "MYR"
     source_bank: str = "unknown"
     confidence: float = 1.0
-    warnings: List[str] = None
+    warnings: List[Dict[str, str]] = None
 
     def __post_init__(self):
         if self.warnings is None:
@@ -51,6 +56,8 @@ class Transaction:
                 if self.credit is None:
                     self.credit = self.amount
 
+        self.warnings.extend(validate_transaction(self))
+
 
 @dataclass
 class BankStatement:
@@ -62,7 +69,7 @@ class BankStatement:
     statement_period_end: Optional[date] = None
     currency: str = "MYR"
     transactions: List[Transaction] = None
-    warnings: List[str] = None
+    warnings: List[Dict[str, str]] = None
     confidence: float = 1.0
 
     def __post_init__(self):
@@ -70,3 +77,29 @@ class BankStatement:
             self.transactions = []
         if self.warnings is None:
             self.warnings = []
+
+
+def validate_transaction(transaction: Transaction) -> List[Dict[str, str]]:
+    """Validate transaction consistency and return warning payloads."""
+    warnings: List[Dict[str, str]] = []
+
+    if not transaction.description:
+        warnings.append(warning("MISSING_DESCRIPTION", "Transaction description is empty."))
+
+    if transaction.debit and transaction.credit:
+        warnings.append(
+            warning(
+                "BOTH_DEBIT_CREDIT_PRESENT",
+                "Both debit and credit are present; row should be manually reviewed.",
+            )
+        )
+
+    if transaction.amount is None:
+        warnings.append(warning("INVALID_AMOUNT", "Transaction amount could not be derived."))
+
+    if transaction.amount == 0:
+        warnings.append(
+            warning("INVALID_AMOUNT", "Transaction amount is zero; verify source statement row.")
+        )
+
+    return warnings

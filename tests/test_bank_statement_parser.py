@@ -14,6 +14,11 @@ from malaysia_fsi.bank_statement.parser import (
 )
 from malaysia_fsi.bank_statement.schema import BankStatement, Transaction, TransactionDirection
 
+
+def warning_codes(warnings):
+    return [item.get("code") for item in warnings]
+
+
 class TestMaybankCSVParser:
     """Test Maybank CSV parser"""
 
@@ -101,10 +106,11 @@ class TestMaybankCSVParser:
         statement = parser.parse_csv(malformed_file)
 
         assert len(statement.transactions) == 2
-        assert any("Missing amount" in warning for warning in statement.warnings)
-        assert any("Could not parse date" in warning for warning in statement.warnings)
-        assert any("Both debit and credit are populated" in warning for warning in statement.warnings)
-        assert any("Non-numeric balance" in warning for warning in statement.warnings)
+        codes = warning_codes(statement.warnings)
+        assert "INVALID_AMOUNT" in codes
+        assert "INVALID_DATE" in codes
+        assert "BOTH_DEBIT_CREDIT_PRESENT" in codes
+        assert "HUMAN_REVIEW_REQUIRED" in codes
 
 class TestBankStatementParser:
     """Test main parser interface"""
@@ -300,7 +306,7 @@ class TestTransactionSchema:
         )
 
         assert tx.currency == "MYR"
-        assert tx.warnings == []
+        assert any(item["code"] == "INVALID_AMOUNT" for item in tx.warnings)
         assert tx.confidence == 1.0
 
 class TestBankStatementSchema:
