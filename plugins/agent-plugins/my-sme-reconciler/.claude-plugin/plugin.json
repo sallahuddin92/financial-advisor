@@ -1,0 +1,8 @@
+{
+  "name": "my-sme-reconciler",
+  "version": "0.1.0",
+  "description": "Malaysian SME finance reconciliation with LHDN e-Invoice compliance checking. All outputs require human review.",
+  "author": {
+    "name": "Malaysia FSI Adaptation"
+  }
+}

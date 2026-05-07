@@ -1,0 +1,8 @@
+{
+  "name": "malaysia-compliance",
+  "version": "0.1.0",
+  "description": "Malaysian compliance skills for LHDN e-Invoice, SST, SSM, and BNM AML/CFT. All outputs require human review.",
+  "author": {
+    "name": "Malaysia FSI Adaptation"
+  }
+}

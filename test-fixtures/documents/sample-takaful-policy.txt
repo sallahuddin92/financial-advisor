@@ -1,0 +1,62 @@
+=== SAMPLE TAKAFUL POLICY DOCUMENT ===
+
+This is a SAMPLE document for testing purposes only.
+Not an actual insurance/takaful policy.
+
+POLICY INFORMATION:
+Policy Number: TKF-2024-001234
+Policy Holder: Ahmad bin Ismail
+NRIC: 901234-08-5678
+Product Type: Family Takaful Plan
+Contribution Amount: RM 500.00 per month
+Coverage Period: 1 January 2024 to 31 December 2024
+
+COVERAGE DETAILS:
+1. Medical Benefits: RM 100,000 per year
+2. Death Benefit: RM 200,000
+3. Total Permanent Disability: RM 200,000
+4. Critical Illness: RM 50,000
+
+CONTRIBUTION PAYMENT:
+Payment Method: Monthly auto-debit
+Bank Account: Maybank 12345678901234
+First Contribution Date: 1 January 2024
+
+BENEFICIARIES:
+1. Primary: Siti binti Hassan (Spouse)
+   Relationship: Spouse
+   NRIC: 921234-08-1234
+   Allocation: 70%
+
+2. Secondary: Ali bin Ahmad (Child)
+   Relationship: Child
+   NRIC: 201234-08-5678
+   Allocation: 30%
+
+SHARIAH COMPLIANCE:
+This product is certified Shariah-compliant by the Shariah Advisory Committee.
+Shariah Concept: Tabarru' and Mudharabah
+Shariah Certificate Number: SAC-2024-001
+
+CLAIMS PROCEDURE:
+1. Notify the company within 30 days of incident
+2. Submit required documents:
+   - Claim form
+   - Medical reports (if applicable)
+   - Police report (if applicable)
+   - Original policy document
+3. Assessment period: 14 working days
+4. Settlement: Within 7 working days after approval
+
+CONTACT INFORMATION:
+Takaful Operator: Sample Takaful Berhad
+Registration Number: 987654-V
+Address: 456 Islamic Finance Centre, Kuala Lumpur
+Phone: +603-1234 5678
+Email: claims@sampletakaful.com
+
+=== END OF SAMPLE DOCUMENT ===
+
+⚠️ This is a sample document for testing and development purposes.
+No real policy information is included.
+All data is fictional and for demonstration only.

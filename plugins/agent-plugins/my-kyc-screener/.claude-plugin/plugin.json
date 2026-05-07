@@ -1,0 +1,8 @@
+{
+  "name": "my-kyc-screener",
+  "version": "0.1.0",
+  "description": "Malaysian KYC screening with SSM document parsing and BNM AML/CFT guidelines. All risk assessments require human review.",
+  "author": {
+    "name": "Malaysia FSI Adaptation"
+  }
+}

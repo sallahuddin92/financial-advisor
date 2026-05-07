@@ -1,0 +1,36 @@
+=== SAMPLE SSM FORM 24 - NOTICE OF SITUATION OF REGISTERED OFFICE ===
+
+This is a SAMPLE document for testing purposes only.
+Not an official government document.
+
+COMPANY INFORMATION:
+Company Name: Example Technology Sdn Bhd
+Registration Number: 123456-K
+Date of Incorporation: 15 January 2020
+Company Type: Private Limited
+Status: Active
+
+REGISTERED OFFICE ADDRESS:
+123 Business Centre
+Level 15, Tower A
+Jalan Business Park
+50000 Kuala Lumpur
+Wilayah Persekutuan
+Malaysia
+
+DATE OF CHANGE: 1 January 2024
+EFFECTIVE DATE: 1 January 2024
+
+DIRECTOR'S DECLARATION:
+I hereby declare that the above information is true and correct.
+
+Director Name: John Smith
+NRIC Number: 801234-14-5678
+Signature: [SAMPLE SIGNATURE]
+Date: 1 January 2024
+
+=== END OF SAMPLE DOCUMENT ===
+
+⚠️ This is a sample document for testing and development purposes.
+No real company information is included.
+All data is fictional and for demonstration only.

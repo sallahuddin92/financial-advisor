@@ -1,0 +1,37 @@
+{
+  "invoice_number": "INV-2024-001",
+  "date": "2024-01-15",
+  "supplier": {
+    "name": "ABC Supplies Sdn Bhd",
+    "registration_number": "123456-H",
+    "address": "123 Business Street, Kuala Lumpur",
+    "sst_number": "B1234567890"
+  },
+  "customer": {
+    "name": "XYZ Corporation Sdn Bhd",
+    "registration_number": "987654-W",
+    "address": "456 Corporate Avenue, Petaling Jaya"
+  },
+  "items": [
+    {
+      "description": "Office Stationery",
+      "quantity": 50,
+      "unit_price": 25.00,
+      "total": 1250.00,
+      "sst_rate": 0.06,
+      "sst_amount": 75.00
+    },
+    {
+      "description": "Computer Accessories",
+      "quantity": 2,
+      "unit_price": 500.00,
+      "total": 1000.00,
+      "sst_rate": 0.06,
+      "sst_amount": 60.00
+    }
+  ],
+  "subtotal": 2250.00,
+  "total_sst": 135.00,
+  "grand_total": 2385.00,
+  "currency": "MYR"
+}

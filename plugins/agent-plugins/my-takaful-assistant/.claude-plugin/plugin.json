@@ -1,0 +1,8 @@
+{
+  "name": "my-takaful-assistant",
+  "version": "0.1.0",
+  "description": "Malaysian Takaful document Q&A and Shariah compliance reference. All outputs require human review.",
+  "author": {
+    "name": "Malaysia FSI Adaptation"
+  }
+}
