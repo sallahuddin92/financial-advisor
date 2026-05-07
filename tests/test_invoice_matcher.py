@@ -8,6 +8,11 @@ from pathlib import Path
 import pytest
 
 from malaysia_fsi.bank_statement.invoice_matcher import InvoiceMatcher, MatchResult
+from malaysia_fsi.bank_statement.report import (
+    export_reconciliation_csv,
+    export_reconciliation_json,
+    export_reconciliation_markdown,
+)
 from malaysia_fsi.bank_statement.schema import BankStatement, Transaction, TransactionDirection
 
 EDGE_FIXTURES = Path("test-fixtures/sample-data/invoice-edge-cases")
@@ -663,3 +668,88 @@ class TestInvoiceMatcher:
         invoices = [{"invoice_number": "INV-A", "grand_total": 0.3}]
         report = matcher.build_reconciliation_report(statement, results, invoices)
         assert report["total_matched_amount"] == 0.6
+
+    def test_report_exporters_json_csv_markdown(self):
+        """Test reconciliation report exporters for JSON/CSV/Markdown outputs."""
+        report = {
+            "statement_bank": "Maybank",
+            "statement_period": {"start": "2024-01-01", "end": "2024-01-31"},
+            "total_transactions": 2,
+            "total_invoices": 1,
+            "matched_count": 1,
+            "possible_match_count": 0,
+            "unmatched_count": 1,
+            "overpaid_count": 0,
+            "underpaid_count": 0,
+            "total_matched_amount": 1000.0,
+            "total_unmatched_invoice_amount": 200.0,
+            "warnings": [{"code": "HUMAN_REVIEW_REQUIRED", "message": "Review required"}],
+            "human_review_required": True,
+        }
+
+        json_text = export_reconciliation_json(report)
+        csv_text = export_reconciliation_csv(report)
+        md_text = export_reconciliation_markdown(report)
+
+        assert "\"statement_bank\": \"Maybank\"" in json_text
+        assert "field,value" in csv_text
+        assert "statement_bank,Maybank" in csv_text
+        assert "# Reconciliation Report" in md_text
+        assert "HUMAN REVIEW REQUIRED" in md_text
+
+    def test_new_cli_match_csv_and_markdown_output_files(self):
+        """Test CLI match writes CSV and Markdown output files."""
+        sample_statement = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+        sample_invoice = Path("test-fixtures/sample-data/sample-invoice.json")
+
+        if not sample_statement.exists() or not sample_invoice.exists():
+            pytest.skip("Required sample fixtures not found")
+
+        csv_out = Path("/tmp/reconciliation-report-test.csv")
+        md_out = Path("/tmp/reconciliation-report-test.md")
+        csv_out.unlink(missing_ok=True)
+        md_out.unlink(missing_ok=True)
+
+        proc_csv = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "malaysia_fsi.bank_statement.cli",
+                "match",
+                str(sample_statement),
+                str(sample_invoice),
+                "--format",
+                "csv",
+                "--output",
+                str(csv_out),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert proc_csv.returncode == 0, proc_csv.stderr
+        assert csv_out.exists()
+        assert "field,value" in csv_out.read_text()
+
+        proc_md = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "malaysia_fsi.bank_statement.cli",
+                "match",
+                str(sample_statement),
+                str(sample_invoice),
+                "--format",
+                "md",
+                "--output",
+                str(md_out),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert proc_md.returncode == 0, proc_md.stderr
+        assert md_out.exists()
+        md_text = md_out.read_text()
+        assert "Reconciliation Report" in md_text
+        assert "HUMAN REVIEW REQUIRED" in md_text

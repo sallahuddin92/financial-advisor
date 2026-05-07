@@ -8,7 +8,12 @@ from typing import Iterable, List, Optional, Tuple
 
 from .invoice_matcher import InvoiceMatcher
 from .parser import BankStatementParser
-from .report import format_transaction_output
+from .report import (
+    export_reconciliation_csv,
+    export_reconciliation_json,
+    export_reconciliation_markdown,
+    format_transaction_output,
+)
 from .schema import TransactionDirection
 
 
@@ -120,8 +125,13 @@ def run_match(args: argparse.Namespace) -> int:
     if args.strict and reconciliation.get("warnings"):
         reconciliation["strict_mode_failed"] = True
 
-    if args.json:
-        output_text = json.dumps(reconciliation, indent=2)
+    output_format = "json" if args.json else args.format
+    if output_format == "json":
+        output_text = export_reconciliation_json(reconciliation)
+    elif output_format == "csv":
+        output_text = export_reconciliation_csv(reconciliation)
+    elif output_format == "md":
+        output_text = export_reconciliation_markdown(reconciliation)
     elif args.quiet:
         output_text = ""
     else:
@@ -226,6 +236,12 @@ def build_main_parser() -> argparse.ArgumentParser:
     match_cmd.add_argument("input", type=Path, help="Bank statement CSV path")
     match_cmd.add_argument("invoices", type=Path, nargs="+", help="Invoice JSON file(s) or directories")
     match_cmd.add_argument("--json", action="store_true", help="Emit JSON output")
+    match_cmd.add_argument(
+        "--format",
+        choices=["summary", "json", "csv", "md"],
+        default="summary",
+        help="Match output format",
+    )
     match_cmd.add_argument("--output", type=Path, help="Write output to file")
     match_cmd.add_argument("--bank", choices=["maybank", "auto"], default="auto")
     match_cmd.add_argument("--date-tolerance-days", type=int, default=3)
@@ -282,6 +298,7 @@ def match_main(argv: Optional[List[str]] = None) -> int:
         input=args.bank_statement,
         invoices=args.invoices,
         json=(args.json or args.format == "json"),
+        format="json" if (args.json or args.format == "json") else "summary",
         output=None,
         bank=(args.bank if args.bank else "auto"),
         date_tolerance_days=args.date_tolerance,
