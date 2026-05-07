@@ -32,11 +32,18 @@ This repository contains the foundation implementation of Malaysian Financial Se
 - ✅ Implemented real parsing format: **Maybank CSV only**
 - ✅ Offline invoice matching, reconciliation summaries, and JSON/CSV/Markdown report outputs
 - ✅ Unified CLI entrypoint: `python3 -m malaysia_fsi.bank_statement.cli`
-- ✅ Receipt schema foundation for JSON/manual receipt ingestion (`malaysia_fsi.receipts.schema`)
+- ✅ Receipt JSON/manual ingestion and rule-based category engine (`malaysia_fsi.receipts`)
 - 🚫 No MyInvois submission
 - 🚫 No SSM/JPN/BNM verification
 - 🚫 No live bank/government/credit bureau/market data API integrations
 - ⚠️ **HUMAN REVIEW REQUIRED** for every output and decision
+
+### Supported Receipt Workflows
+
+- JSON/manual receipt input
+- Rule-based categorization (transparent keyword rules)
+- Batch categorization with duplicate candidate detection
+- Human-review-required warnings for all categorized outputs
 
 ### Quick Commands
 

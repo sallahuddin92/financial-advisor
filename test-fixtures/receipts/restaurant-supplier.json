@@ -1,0 +1,11 @@
+{
+  "receipt_id": "RCP-SUP-001",
+  "merchant_name": "MYDIN SEREMBAN",
+  "receipt_date": "2024-03-10",
+  "total_amount": "180.40",
+  "currency": "MYR",
+  "payment_method": "card",
+  "line_items": [
+    {"description": "Cooking oil bulk", "total": "180.40"}
+  ]
+}

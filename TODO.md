@@ -13,9 +13,9 @@
 - [x] Expanded anonymized fixture suite
 - [x] Verification script and CI workflow
 - [x] Receipt schema and warning-code foundation for SME expense lane
+- [x] Rule-based receipt category mapping and duplicate candidate detection
 
 ### Next Small Tasks 🔄
-- [ ] Implement receipt categorizer rules and duplicate detection
 - [ ] Build monthly expense summary reports (JSON/CSV/Markdown)
 - [ ] Add receipt CLI (`categorize`, `summarize`, `validate`)
 - [ ] Add larger anonymized Maybank fixture variants for high-volume testing

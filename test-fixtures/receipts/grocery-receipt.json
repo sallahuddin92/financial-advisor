@@ -1,0 +1,12 @@
+{
+  "receipt_id": "RCP-GROC-001",
+  "merchant_name": "MYDIN SEREMBAN",
+  "receipt_date": "2024-03-10",
+  "total_amount": "180.40",
+  "currency": "MYR",
+  "payment_method": "cash",
+  "line_items": [
+    {"description": "Chicken", "total": "85.20"},
+    {"description": "Vegetables", "total": "95.20"}
+  ]
+}

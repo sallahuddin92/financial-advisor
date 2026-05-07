@@ -1,0 +1,12 @@
+{
+  "receipt_id": "RCP-PKG-001",
+  "merchant_name": "SHOPEE EXPRESS SELLER SUPPLIES",
+  "receipt_date": "2024-03-11",
+  "total_amount": "75.00",
+  "currency": "MYR",
+  "payment_method": "ewallet",
+  "line_items": [
+    {"description": "Food containers", "total": "50.00"},
+    {"description": "Stickers and labels", "total": "25.00"}
+  ]
+}
