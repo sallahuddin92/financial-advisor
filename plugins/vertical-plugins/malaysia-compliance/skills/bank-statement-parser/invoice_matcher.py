@@ -6,7 +6,7 @@ Matches parsed bank transactions with invoice JSON files
 import json
 import re
 from datetime import date, timedelta
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 from pathlib import Path
 
 # Handle both standalone and relative imports
@@ -316,3 +316,72 @@ class InvoiceMatcher:
             report["average_confidence"] = report["total_confidence"] / len(results)
 
         return report
+
+    def build_reconciliation_report(
+        self,
+        statement: BankStatement,
+        results: List[MatchResult],
+        invoices: List[Dict]
+    ) -> Dict:
+        """Build reconciliation JSON summary for human-reviewed workflows."""
+        status_counts = {
+            "matched_count": 0,
+            "possible_match_count": 0,
+            "unmatched_count": 0,
+            "overpaid_count": 0,
+            "underpaid_count": 0,
+        }
+        total_matched_amount = 0.0
+        warnings = list(statement.warnings or [])
+
+        matched_invoice_keys = set()
+        invoice_totals_by_key = {}
+
+        for idx, invoice in enumerate(invoices):
+            invoice_number = invoice.get("invoice_number")
+            invoice_key = invoice_number if invoice_number else f"invoice_index_{idx}"
+            invoice_totals_by_key[invoice_key] = float(invoice.get("grand_total", 0.0) or 0.0)
+
+        for result in results:
+            status_key = f"{result.status}_count"
+            if status_key in status_counts:
+                status_counts[status_key] += 1
+
+            if result.status in {"matched", "possible_match", "overpaid", "underpaid"}:
+                total_matched_amount += float(result.matched_amount or 0.0)
+                if result.matched_invoice:
+                    invoice_number = result.matched_invoice.get("invoice_number")
+                    if invoice_number and invoice_number in invoice_totals_by_key:
+                        matched_invoice_keys.add(invoice_number)
+                    else:
+                        # Fallback for invoice payloads without invoice_number
+                        for idx, invoice in enumerate(invoices):
+                            if invoice is result.matched_invoice:
+                                matched_invoice_keys.add(f"invoice_index_{idx}")
+                                break
+
+            warnings.extend(result.warnings or [])
+
+        unmatched_invoice_keys = set(invoice_totals_by_key.keys()) - matched_invoice_keys
+        total_unmatched_invoice_amount = sum(
+            invoice_totals_by_key[key] for key in unmatched_invoice_keys
+        )
+
+        return {
+            "statement_bank": statement.bank_name,
+            "statement_period": {
+                "start": statement.statement_period_start.isoformat() if statement.statement_period_start else None,
+                "end": statement.statement_period_end.isoformat() if statement.statement_period_end else None,
+            },
+            "total_transactions": len(statement.transactions or []),
+            "total_invoices": len(invoices),
+            "matched_count": status_counts["matched_count"],
+            "possible_match_count": status_counts["possible_match_count"],
+            "unmatched_count": status_counts["unmatched_count"],
+            "overpaid_count": status_counts["overpaid_count"],
+            "underpaid_count": status_counts["underpaid_count"],
+            "total_matched_amount": round(total_matched_amount, 2),
+            "total_unmatched_invoice_amount": round(total_unmatched_invoice_amount, 2),
+            "warnings": sorted(set(warnings)),
+            "human_review_required": True,
+        }

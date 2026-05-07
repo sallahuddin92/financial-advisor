@@ -44,6 +44,7 @@ def main():
     parser.add_argument("bank_statement", type=Path, help="Path to bank statement CSV file")
     parser.add_argument("invoices", type=Path, nargs="+", help="Path(s) to invoice JSON file(s)")
     parser.add_argument("--bank", type=str, help="Bank name hint (maybank)", default=None)
+    parser.add_argument("--json", action="store_true", help="Output reconciliation summary in JSON format")
     parser.add_argument("--format", choices=["json", "summary"], default="summary",
                        help="Output format")
     parser.add_argument("--date-tolerance", type=int, default=3,
@@ -75,10 +76,18 @@ def main():
         )
         results = invoice_matcher.match_statement_to_invoices(statement, args.invoices)
         report = invoice_matcher.generate_matching_report(results)
+        loaded_invoices = []
+        for invoice_path in args.invoices:
+            invoice = invoice_matcher.load_invoice(invoice_path)
+            if invoice:
+                loaded_invoices.append(invoice)
+        reconciliation_report = invoice_matcher.build_reconciliation_report(
+            statement, results, loaded_invoices
+        )
 
-        if args.format == "json":
+        if args.json or args.format == "json":
             # JSON output
-            print(json.dumps(report, indent=2))
+            print(json.dumps(reconciliation_report, indent=2))
         else:
             # Summary output
             print(f"=== Invoice Matching Report ===")
