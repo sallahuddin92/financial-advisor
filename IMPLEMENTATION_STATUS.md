@@ -15,6 +15,7 @@
 - ✅ Reconciliation report exporters: JSON, CSV, Markdown
 - ✅ Production-hardened CLI with parse/match/validate subcommands
 - ✅ Quality gates: verify script + CI workflow
+- ✅ Receipt ingestion lane started with schema + validation foundation (`malaysia_fsi.receipts.schema`)
 - 🚫 No MyInvois/SSM/JPN/BNM/CTOS/Bursa/bank API integrations
 - ⚠️ Human review required for all outputs
 

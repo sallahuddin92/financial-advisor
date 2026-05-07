@@ -12,8 +12,12 @@
 - [x] Report exporters: JSON, CSV, Markdown
 - [x] Expanded anonymized fixture suite
 - [x] Verification script and CI workflow
+- [x] Receipt schema and warning-code foundation for SME expense lane
 
 ### Next Small Tasks 🔄
+- [ ] Implement receipt categorizer rules and duplicate detection
+- [ ] Build monthly expense summary reports (JSON/CSV/Markdown)
+- [ ] Add receipt CLI (`categorize`, `summarize`, `validate`)
 - [ ] Add larger anonymized Maybank fixture variants for high-volume testing
 - [ ] Add deterministic snapshot tests for Markdown and CSV reports
 - [ ] Add changelog/release-note template for offline MVP releases
