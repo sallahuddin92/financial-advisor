@@ -1,37 +1,18 @@
-"""
-Unit tests for bank statement parser
-"""
+"""Unit tests for bank statement parser."""
 
-import importlib.util
+import subprocess
 import sys
 from datetime import date
 from pathlib import Path
+
 import pytest
 
-# Load modules using file path to avoid hyphen import issues
-base_path = Path(__file__).parent.parent
-parser_path = base_path / "plugins" / "vertical-plugins" / "malaysia-compliance" / "skills" / "bank-statement-parser" / "parser.py"
-schema_path = base_path / "plugins" / "vertical-plugins" / "malaysia-compliance" / "skills" / "bank-statement-parser" / "schema.py"
-
-# Load schema module
-spec = importlib.util.spec_from_file_location("schema", schema_path)
-schema = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(schema)
-
-# Load parser module
-spec = importlib.util.spec_from_file_location("parser", parser_path)
-parser_module = importlib.util.module_from_spec(spec)
-sys.modules["schema"] = schema  # Add to sys.modules for relative imports
-parser_module.schema = schema  # Inject schema module
-spec.loader.exec_module(parser_module)
-
-# Import classes from loaded modules
-Transaction = schema.Transaction
-TransactionDirection = schema.TransactionDirection
-BankStatement = schema.BankStatement
-BankStatementParser = parser_module.BankStatementParser
-MaybankCSVParser = parser_module.MaybankCSVParser
-PLACEHOLDER_NOT_IMPLEMENTED_MESSAGE = parser_module.PLACEHOLDER_NOT_IMPLEMENTED_MESSAGE
+from malaysia_fsi.bank_statement.parser import (
+    PLACEHOLDER_NOT_IMPLEMENTED_MESSAGE,
+    BankStatementParser,
+    MaybankCSVParser,
+)
+from malaysia_fsi.bank_statement.schema import BankStatement, Transaction, TransactionDirection
 
 class TestMaybankCSVParser:
     """Test Maybank CSV parser"""
@@ -225,6 +206,26 @@ class TestBankStatementParser:
         for bank_code in ["cimb", "public-bank", "rhb", "hong-leong-bank"]:
             with pytest.raises(NotImplementedError, match=PLACEHOLDER_NOT_IMPLEMENTED_MESSAGE):
                 parser.parse_file(sample_file, bank_code)
+
+    def test_legacy_plugin_parser_cli_still_works(self):
+        """Test legacy plugin CLI path remains callable."""
+        sample_file = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+        cli_path = Path(
+            "plugins/vertical-plugins/malaysia-compliance/skills/bank-statement-parser/cli.py"
+        )
+
+        if not sample_file.exists():
+            pytest.skip("Sample file not found")
+
+        proc = subprocess.run(
+            [sys.executable, str(cli_path), str(sample_file), "--format", "json", "--bank", "maybank"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        assert proc.returncode == 0, proc.stderr
+        assert "\"bank_name\": \"Maybank\"" in proc.stdout
 
     def test_file_not_found(self):
         """Test error handling for missing file"""

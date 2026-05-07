@@ -1,58 +1,16 @@
-"""
-Unit tests for invoice matcher
-"""
-
-import importlib.util
+import json
+import subprocess
 import sys
 import tempfile
-import json
 from datetime import date
 from pathlib import Path
+
 import pytest
 
+from malaysia_fsi.bank_statement.invoice_matcher import InvoiceMatcher, MatchResult
+from malaysia_fsi.bank_statement.schema import BankStatement, Transaction, TransactionDirection
+
 EDGE_FIXTURES = Path("test-fixtures/sample-data/invoice-edge-cases")
-
-# Load modules using file path to avoid hyphen import issues
-base_path = Path(__file__).parent.parent
-schema_path = base_path / "plugins" / "vertical-plugins" / "malaysia-compliance" / "skills" / "bank-statement-parser" / "schema.py"
-parser_path = base_path / "plugins" / "vertical-plugins" / "malaysia-compliance" / "skills" / "bank-statement-parser" / "parser.py"
-matcher_path = base_path / "plugins" / "vertical-plugins" / "malaysia-compliance" / "skills" / "bank-statement-parser" / "invoice_matcher.py"
-match_cli_path = base_path / "plugins" / "vertical-plugins" / "malaysia-compliance" / "skills" / "bank-statement-parser" / "match_cli.py"
-
-# Load schema module
-spec = importlib.util.spec_from_file_location("schema", schema_path)
-schema = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(schema)
-
-# Load parser module
-spec = importlib.util.spec_from_file_location("parser", parser_path)
-parser_module = importlib.util.module_from_spec(spec)
-sys.modules["schema"] = schema  # Add to sys.modules for relative imports
-parser_module.schema = schema  # Inject schema module
-spec.loader.exec_module(parser_module)
-
-# Load matcher module
-spec = importlib.util.spec_from_file_location("matcher", matcher_path)
-matcher_module = importlib.util.module_from_spec(spec)
-sys.modules["schema"] = schema  # Add to sys.modules for relative imports
-matcher_module.schema = schema  # Inject schema module
-matcher_module.parser = parser_module  # Inject parser module
-spec.loader.exec_module(matcher_module)
-
-# Load match CLI module
-spec = importlib.util.spec_from_file_location("match_cli", match_cli_path)
-match_cli_module = importlib.util.module_from_spec(spec)
-sys.modules["schema"] = schema
-sys.modules["parser"] = parser_module
-sys.modules["matcher"] = matcher_module
-spec.loader.exec_module(match_cli_module)
-
-# Import classes from loaded modules
-Transaction = schema.Transaction
-TransactionDirection = schema.TransactionDirection
-BankStatement = schema.BankStatement
-InvoiceMatcher = matcher_module.InvoiceMatcher
-match_cli_main = match_cli_module.main
 
 class TestInvoiceMatcher:
     """Test invoice matching functionality"""
@@ -520,7 +478,7 @@ class TestInvoiceMatcher:
 
         match_1 = matcher.match_transaction_to_invoice(statement.transactions[0], invoice_1)
         match_2 = matcher.match_transaction_to_invoice(statement.transactions[1], invoice_2)
-        no_match = matcher_module.MatchResult("unmatched", 0.1, ["No matching invoice found"])
+        no_match = MatchResult("unmatched", 0.1, ["No matching invoice found"])
         no_match.matched_transaction = Transaction(
             date=date(2024, 1, 25),
             description="Bank charge",
@@ -546,32 +504,34 @@ class TestInvoiceMatcher:
         assert report["human_review_required"] is True
         assert "Statement-level warning" in report["warnings"]
 
-    def test_match_cli_json_flag_outputs_reconciliation_json(self, monkeypatch, capsys):
-        """Test --json CLI flag outputs reconciliation JSON summary"""
+    def test_match_cli_json_flag_outputs_reconciliation_json(self):
+        """Test legacy match CLI path outputs reconciliation JSON summary."""
         sample_statement = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
         sample_invoice = Path("test-fixtures/sample-data/sample-invoice.json")
+        match_cli_path = Path(
+            "plugins/vertical-plugins/malaysia-compliance/skills/bank-statement-parser/match_cli.py"
+        )
 
         if not sample_statement.exists() or not sample_invoice.exists():
             pytest.skip("Required sample fixtures not found")
 
-        monkeypatch.setattr(
-            sys,
-            "argv",
+        proc = subprocess.run(
             [
-                "match_cli.py",
+                sys.executable,
+                str(match_cli_path),
                 str(sample_statement),
                 str(sample_invoice),
                 "--json",
                 "--bank",
                 "maybank",
             ],
+            capture_output=True,
+            text=True,
+            check=False,
         )
 
-        exit_code = match_cli_main()
-        captured = capsys.readouterr()
-
-        assert exit_code == 0
-        payload = json.loads(captured.out)
+        assert proc.returncode == 0, proc.stderr
+        payload = json.loads(proc.stdout)
         assert payload["statement_bank"] == "Maybank"
         assert payload["total_invoices"] == 1
         assert "human_review_required" in payload
