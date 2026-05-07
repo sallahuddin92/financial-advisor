@@ -6,12 +6,12 @@ Currently supports Maybank CSV format
 import csv
 import re
 from datetime import datetime, date
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Callable
 from pathlib import Path
 
 # Handle both standalone and relative imports
 try:
-    from .schema import Transaction, BankStatement, TransactionDirection
+    from .schema import Transaction, BankStatement
 except ImportError:
     # Fallback for standalone execution
     import importlib.util
@@ -25,12 +25,34 @@ except ImportError:
 
     Transaction = schema.Transaction
     BankStatement = schema.BankStatement
-    TransactionDirection = schema.TransactionDirection
 
-class MaybankCSVParser:
+PLACEHOLDER_NOT_IMPLEMENTED_MESSAGE = "Real anonymized fixture required before enabling this bank format."
+
+class BaseBankParser:
+    """Base parser contract for bank-specific parsers."""
+
+    def __init__(self, bank_name: str, implemented: bool):
+        self.bank_name = bank_name
+        self.implemented = implemented
+
+    def parse_csv(self, file_path: Path) -> BankStatement:
+        """Parse CSV statement for the bank."""
+        raise NotImplementedError
+
+class PlaceholderBankParser(BaseBankParser):
+    """Disabled parser for bank formats without anonymized fixtures."""
+
+    def __init__(self, bank_name: str):
+        super().__init__(bank_name=bank_name, implemented=False)
+
+    def parse_csv(self, file_path: Path) -> BankStatement:
+        raise NotImplementedError(PLACEHOLDER_NOT_IMPLEMENTED_MESSAGE)
+
+class MaybankCSVParser(BaseBankParser):
     """Parser for Maybank CSV statement format"""
 
     def __init__(self):
+        super().__init__(bank_name="Maybank", implemented=True)
         self.bank_name = "Maybank"
         self.confidence = 0.9
 
@@ -164,34 +186,133 @@ class MaybankCSVParser:
             confidence=self.confidence if transactions else 0.0
         )
 
+class CIMBCSVParser(PlaceholderBankParser):
+    """Placeholder parser for CIMB CSV format."""
+
+    def __init__(self):
+        super().__init__(bank_name="CIMB")
+
+class PublicBankCSVParser(PlaceholderBankParser):
+    """Placeholder parser for Public Bank CSV format."""
+
+    def __init__(self):
+        super().__init__(bank_name="Public Bank")
+
+class RHBCSVParser(PlaceholderBankParser):
+    """Placeholder parser for RHB CSV format."""
+
+    def __init__(self):
+        super().__init__(bank_name="RHB")
+
+class HongLeongBankCSVParser(PlaceholderBankParser):
+    """Placeholder parser for Hong Leong Bank CSV format."""
+
+    def __init__(self):
+        super().__init__(bank_name="Hong Leong Bank")
+
+class ParserRegistry:
+    """Registry/factory for bank statement parsers and format detection."""
+
+    def __init__(self):
+        self._parsers = {}
+        self._detectors = {}
+
+    def register_parser(self, bank_code: str, parser: BaseBankParser, detector: Optional[Callable[[Path], bool]] = None) -> None:
+        code = bank_code.lower()
+        self._parsers[code] = parser
+        if detector is not None:
+            self._detectors[code] = detector
+
+    def get_parser(self, bank_code: str) -> BaseBankParser:
+        parser = self._parsers.get((bank_code or "").lower())
+        if not parser:
+            supported = ", ".join(sorted(self._parsers.keys()))
+            raise ValueError(f"Unsupported bank hint '{bank_code}'. Supported banks: {supported}")
+        return parser
+
+    def list_banks(self) -> List[str]:
+        return list(self._parsers.keys())
+
+    def detect_bank(self, file_path: Path) -> Optional[str]:
+        for bank_code, detector in self._detectors.items():
+            try:
+                if detector(file_path):
+                    return bank_code
+            except Exception:
+                continue
+        return None
+
+    def get_bank_statuses(self) -> List[dict]:
+        statuses = []
+        for bank_code, parser in self._parsers.items():
+            statuses.append({
+                "bank_code": bank_code,
+                "bank_name": parser.bank_name,
+                "enabled": parser.implemented,
+                "production_ready": False,
+            })
+        return statuses
+
 class BankStatementParser:
     """Main parser interface"""
 
     def __init__(self):
-        self.parsers = {
-            'maybank': MaybankCSVParser(),
-        }
+        self.registry = ParserRegistry()
+        self.registry.register_parser("maybank", MaybankCSVParser(), detector=self._detect_maybank_csv)
+        self.registry.register_parser("cimb", CIMBCSVParser())
+        self.registry.register_parser("public-bank", PublicBankCSVParser())
+        self.registry.register_parser("rhb", RHBCSVParser())
+        self.registry.register_parser("hong-leong-bank", HongLeongBankCSVParser())
+
+    def _detect_maybank_csv(self, file_path: Path) -> bool:
+        """Detect Maybank CSV based on known column shape."""
+        if file_path.suffix.lower() != ".csv":
+            return False
+        try:
+            with open(file_path, "r", encoding="utf-8") as csvfile:
+                sample = csvfile.read(1024)
+                csvfile.seek(0)
+                delimiter = csv.Sniffer().sniff(sample).delimiter
+                reader = csv.DictReader(csvfile, delimiter=delimiter)
+                expected_columns = {"Date", "Description", "Debit", "Credit", "Balance"}
+                actual_columns = set(reader.fieldnames or [])
+                return expected_columns.issubset(actual_columns)
+        except Exception:
+            return False
 
     def parse_file(self, file_path: Path, bank_hint: Optional[str] = None) -> BankStatement:
         """Parse bank statement file"""
         if not file_path.exists():
             raise FileNotFoundError(f"File not found: {file_path}")
 
-        # For now, only support Maybank CSV
-        if bank_hint and bank_hint.lower() in self.parsers:
-            parser = self.parsers[bank_hint.lower()]
+        if file_path.suffix.lower() != '.csv':
+            raise ValueError(f"Unsupported file format: {file_path.suffix}")
+
+        if bank_hint:
+            parser = self.registry.get_parser(bank_hint)
         else:
-            # Default to Maybank for CSV files
-            if file_path.suffix.lower() == '.csv':
-                parser = self.parsers['maybank']
-            else:
-                raise ValueError(f"Unsupported file format: {file_path.suffix}")
+            detected_bank = self.registry.detect_bank(file_path)
+            if not detected_bank:
+                raise ValueError("Could not auto-detect a supported bank format from CSV headers")
+            parser = self.registry.get_parser(detected_bank)
 
         return parser.parse_csv(file_path)
 
     def get_supported_banks(self) -> List[str]:
-        """Get list of supported banks"""
-        return list(self.parsers.keys())
+        """Get list of bank codes configured in the parser registry."""
+        return self.registry.list_banks()
+
+    def get_enabled_banks(self) -> List[str]:
+        """Get list of currently implemented bank parsers."""
+        return [
+            status["bank_code"]
+            for status in self.registry.get_bank_statuses()
+            if status["enabled"]
+        ]
+
+    def get_bank_statuses(self) -> List[dict]:
+        """Get parser status metadata for each known bank."""
+        return self.registry.get_bank_statuses()
 
     def get_supported_formats(self) -> List[str]:
         """Get list of supported file formats"""

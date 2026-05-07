@@ -31,6 +31,7 @@ TransactionDirection = schema.TransactionDirection
 BankStatement = schema.BankStatement
 BankStatementParser = parser_module.BankStatementParser
 MaybankCSVParser = parser_module.MaybankCSVParser
+PLACEHOLDER_NOT_IMPLEMENTED_MESSAGE = parser_module.PLACEHOLDER_NOT_IMPLEMENTED_MESSAGE
 
 class TestMaybankCSVParser:
     """Test Maybank CSV parser"""
@@ -133,7 +134,38 @@ class TestBankStatementParser:
         supported = parser.get_supported_banks()
 
         assert "maybank" in supported
-        assert len(supported) == 1  # Only Maybank implemented
+        assert "cimb" in supported
+        assert "public-bank" in supported
+        assert "rhb" in supported
+        assert "hong-leong-bank" in supported
+        assert len(supported) == 5
+
+    def test_get_enabled_banks(self):
+        """Test enabled banks list (implemented parsers only)"""
+        parser = BankStatementParser()
+        enabled = parser.get_enabled_banks()
+
+        assert enabled == ["maybank"]
+
+    def test_disabled_banks_listed_but_not_enabled(self):
+        """Test disabled bank parsers are visible but clearly disabled"""
+        parser = BankStatementParser()
+        statuses = parser.get_bank_statuses()
+        status_by_bank = {entry["bank_code"]: entry for entry in statuses}
+
+        for bank_code in ["cimb", "public-bank", "rhb", "hong-leong-bank"]:
+            assert bank_code in status_by_bank
+            assert status_by_bank[bank_code]["enabled"] is False
+            assert status_by_bank[bank_code]["production_ready"] is False
+
+    def test_no_unsupported_bank_claims_production_support(self):
+        """Test unsupported bank formats never claim production readiness"""
+        parser = BankStatementParser()
+        statuses = parser.get_bank_statuses()
+
+        for status in statuses:
+            if not status["enabled"]:
+                assert status["production_ready"] is False
 
     def test_get_supported_formats(self):
         """Test supported formats list"""
@@ -168,6 +200,31 @@ class TestBankStatementParser:
 
         assert statement.bank_name == "Maybank"
         assert len(statement.transactions) > 0
+
+    def test_parse_file_without_bank_hint_unknown_csv(self):
+        """Test clear error when CSV headers do not match supported detectors"""
+        unknown_file = Path("test-unknown-bank.csv")
+        unknown_file.write_text("TxnDate,Details,Out,In,Bal\n2024-01-01,Test,100,,1000\n")
+
+        try:
+            parser = BankStatementParser()
+            with pytest.raises(ValueError, match="Could not auto-detect a supported bank format"):
+                parser.parse_file(unknown_file)
+        finally:
+            if unknown_file.exists():
+                unknown_file.unlink()
+
+    def test_disabled_bank_parsers_raise_not_implemented(self):
+        """Test placeholders raise clear disabled message for unimplemented banks"""
+        sample_file = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+
+        if not sample_file.exists():
+            pytest.skip("Sample file not found")
+
+        parser = BankStatementParser()
+        for bank_code in ["cimb", "public-bank", "rhb", "hong-leong-bank"]:
+            with pytest.raises(NotImplementedError, match=PLACEHOLDER_NOT_IMPLEMENTED_MESSAGE):
+                parser.parse_file(sample_file, bank_code)
 
     def test_file_not_found(self):
         """Test error handling for missing file"""

@@ -37,9 +37,12 @@
 ### Current Capabilities
 
 ✅ **Maybank CSV Parsing**: Working parser for Maybank CSV statements with normalized output
+✅ **Multi-Bank Parser Architecture**: Registry/factory framework added for extensible bank-specific parsers
+✅ **Auto-Detection Framework**: CSV detection pipeline implemented; only Maybank detector enabled
+✅ **Disabled Bank Placeholders**: CIMB/Public Bank/RHB/Hong Leong classes are present but intentionally disabled
 ✅ **Standard Transaction Schema**: Consistent data structure with confidence scores and warnings
 ✅ **CLI Interface**: Command-line tool for testing and validation
-✅ **Unit Tests**: Comprehensive test coverage (14 tests passing)
+✅ **Unit Tests**: Comprehensive test coverage for parsing and matching workflows
 ✅ **Manual Workflows**: Support for manual document upload and verification
 ✅ **Reference Information**: Malaysian compliance guidelines and requirements
 ✅ **Guardrails**: Comprehensive "human review required" disclaimers
@@ -47,7 +50,7 @@
 
 ❌ **No Live Data**: No real-time integrations or live data feeds
 ❌ **No Automation**: No automated approvals or decisions
-❌ **Limited Bank Support**: Only Maybank CSV implemented, other banks still placeholder
+❌ **Limited Bank Support**: Only Maybank CSV parser is enabled; other listed banks require real anonymized fixtures before activation
 ❌ **No XLSX Support**: Only CSV parsing implemented
 
 ## Architecture Overview
@@ -96,10 +99,12 @@ plugins/
 
 ### ✅ Completed in Phase 2
 - **Maybank CSV Parser**: Fully implemented with comprehensive test coverage
+- **Multi-Bank Parser Registry/Factory**: Added scalable architecture for future bank parsers
+- **Bank Placeholder Guardrails**: CIMB/Public Bank/RHB/Hong Leong placeholders raise explicit fixture-required `NotImplementedError`
 - **Standard Transaction Schema**: Normalized output format with confidence scores
 - **Invoice Matching System**: Complete matching engine with amount, date, and keyword analysis
 - **CLI Tools**: Working command-line interfaces for parsing and matching validation
-- **Unit Tests**: 28 comprehensive tests covering parsing, matching, schema, and error handling
+- **Unit Tests**: Comprehensive tests covering parsing, matching, schema, and error handling
 - **Import Fix**: Resolved Python hyphen import issues with file-path loading
 
 ### 🔄 Current Status

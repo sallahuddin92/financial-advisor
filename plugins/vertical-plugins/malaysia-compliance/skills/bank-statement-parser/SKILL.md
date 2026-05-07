@@ -13,6 +13,9 @@ This skill provides a working CSV parser for Maybank statements with framework f
 ## ✅ Implemented
 
 - [x] Maybank CSV format parser
+- [x] Multi-bank parser registry/factory architecture
+- [x] Auto-detection framework (Maybank detection enabled)
+- [x] Disabled parser placeholders (CIMB, Public Bank, RHB, Hong Leong Bank)
 - [x] Data validation and error handling
 - [x] Currency and date normalization
 - [x] Standard transaction schema
@@ -24,23 +27,24 @@ This skill provides a working CSV parser for Maybank statements with framework f
 
 ## TODO: Implementation Required
 
-- [ ] CIMB CSV format parser
-- [ ] Public Bank CSV format parser
-- [ ] RHB CSV format parser
-- [ ] Hong Leong Bank CSV format parser
+- [ ] CIMB CSV parsing implementation (currently disabled placeholder)
+- [ ] Public Bank CSV parsing implementation (currently disabled placeholder)
+- [ ] RHB CSV parsing implementation (currently disabled placeholder)
+- [ ] Hong Leong Bank CSV parsing implementation (currently disabled placeholder)
 - [ ] XLSX format support for all banks
-- [ ] Automatic bank format detection
 - [ ] Enhanced error recovery
 - [ ] Advanced matching algorithms
 
 ## Current Capabilities
 
 - ✅ **Maybank CSV parsing**: Full support for Maybank CSV format
+- ✅ **Parser architecture**: Registry/factory design with explicit enabled/disabled bank statuses
+- ✅ **Guarded placeholders**: Unimplemented banks raise `NotImplementedError` with clear fixture requirement
 - ✅ **Standard schema**: Normalized transaction output with confidence scores
 - ✅ **Invoice matching**: Match transactions to invoice JSON files using amount, date, and keyword analysis
 - ✅ **Error handling**: Robust parsing with warnings for problematic rows
 - ✅ **CLI tools**: Command-line interfaces for parsing and matching validation
-- ✅ **Unit tests**: Comprehensive test coverage for parsing and matching (28 tests)
+- ✅ **Unit tests**: Comprehensive test coverage for parsing and matching
 - ✅ **Manual verification**: All outputs include human review requirements
 
 ## Supported Bank Formats
@@ -48,10 +52,10 @@ This skill provides a working CSV parser for Maybank statements with framework f
 | Bank | CSV Support | XLSX Support | Notes |
 |------|-------------|--------------|-------|
 | Maybank | ✅ Implemented | ❌ Planned | Most common format |
-| CIMB | ❌ Planned | ❌ Planned | Multiple variants |
-| Public Bank | ❌ Planned | ❌ Planned | Standard format |
-| RHB | ❌ Planned | ❌ Planned | Standard format |
-| Hong Leong | ❌ Planned | ❌ Planned | Standard format |
+| CIMB | 🚫 Disabled placeholder | ❌ Planned | Requires real anonymized fixture |
+| Public Bank | 🚫 Disabled placeholder | ❌ Planned | Requires real anonymized fixture |
+| RHB | 🚫 Disabled placeholder | ❌ Planned | Requires real anonymized fixture |
+| Hong Leong | 🚫 Disabled placeholder | ❌ Planned | Requires real anonymized fixture |
 
 ## Data Extraction
 
