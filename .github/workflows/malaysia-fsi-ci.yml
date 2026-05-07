@@ -1,0 +1,35 @@
+name: Malaysia FSI CI
+
+on:
+  push:
+    branches: ["main", "codex/**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+
+      - name: Run pytest
+        run: |
+          python -m pytest tests/test_bank_statement_parser.py tests/test_invoice_matcher.py -v
+
+      - name: Run Phase 1 validator
+        run: |
+          python scripts/validate_malaysia_phase1.py
+
+      - name: Run Malaysia FSI verify script
+        run: |
+          python scripts/verify_malaysia_fsi.py
