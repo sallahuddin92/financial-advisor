@@ -20,6 +20,8 @@
 - ✅ Monthly SME expense summary module with JSON/CSV/Markdown exporters
 - ✅ Receipt CLI subcommands (`categorize`, `summarize`, `validate`)
 - ✅ Reconciliation integration hints for unmatched transactions (advisory category suggestions only)
+- ✅ Receipt-only inputs currently supported via JSON/manual data (no OCR/PDF/image parsing)
+- ✅ Institutional-finance placeholder plugin directories created (no functional implementation)
 - 🚫 No MyInvois/SSM/JPN/BNM/CTOS/Bursa/bank API integrations
 - ⚠️ Human review required for all outputs
 
@@ -73,6 +75,7 @@
 ❌ **No Automation**: No automated approvals or decisions
 ❌ **Limited Bank Support**: Only Maybank CSV parser is enabled; other listed banks require real anonymized fixtures before activation
 ❌ **No XLSX Support**: Only CSV parsing implemented
+❌ **No Receipt OCR**: Receipt ingestion is JSON/manual only
 
 ## Architecture Overview
 

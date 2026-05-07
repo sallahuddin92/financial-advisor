@@ -24,7 +24,7 @@ jobs:
 
       - name: Run pytest
         run: |
-          python -m pytest tests/test_bank_statement_parser.py tests/test_invoice_matcher.py -v
+          python -m pytest -v
 
       - name: Run Phase 1 validator
         run: |

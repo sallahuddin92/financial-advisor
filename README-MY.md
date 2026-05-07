@@ -37,6 +37,7 @@ This repository contains the foundation implementation of Malaysian Financial Se
 - 🚫 No SSM/JPN/BNM verification
 - 🚫 No live bank/government/credit bureau/market data API integrations
 - ⚠️ **HUMAN REVIEW REQUIRED** for every output and decision
+- ✅ Future institutional plugin architecture placeholders created under `plugins/institutional-finance/` (no implementation yet)
 
 ### Supported Receipt Workflows
 
@@ -51,6 +52,31 @@ This repository contains the foundation implementation of Malaysian Financial Se
   - `python3 -m malaysia_fsi.receipts.cli summarize ...`
   - `python3 -m malaysia_fsi.receipts.cli validate ...`
 
+### Supported Bank Formats (Current)
+
+| Bank | Status | Notes |
+|------|--------|-------|
+| Maybank CSV | ✅ Implemented | Real offline parser in MVP |
+| CIMB | 🚫 Placeholder | Disabled until anonymized fixture available |
+| Public Bank | 🚫 Placeholder | Disabled until anonymized fixture available |
+| RHB | 🚫 Placeholder | Disabled until anonymized fixture available |
+| Hong Leong Bank | 🚫 Placeholder | Disabled until anonymized fixture available |
+
+### Report Outputs (Current)
+
+- Reconciliation reports: `json`, `csv`, `md`
+- Monthly receipt summaries: `json`, `csv`, `md`
+- All outputs include human-review-required warnings
+
+### Receipt Workflow Limitations
+
+- No OCR yet
+- No PDF/image receipt parsing yet
+- JSON/manual receipt input only
+- No LHDN submission
+- No SSM/JPN/BNM verification
+- No external APIs
+
 ### Quick Commands
 
 ```bash
@@ -63,6 +89,15 @@ python3 -m malaysia_fsi.bank_statement.cli match \
   test-fixtures/sample-data/invoices-exact-match \
   --format md \
   --output /tmp/reconciliation-report.md
+
+# Categorize receipts
+python3 -m malaysia_fsi.receipts.cli categorize test-fixtures/receipts --json
+
+# Monthly receipt summary
+python3 -m malaysia_fsi.receipts.cli summarize test-fixtures/receipts --format md --output /tmp/monthly-receipts.md
+
+# Validate receipt JSON inputs
+python3 -m malaysia_fsi.receipts.cli validate --receipt test-fixtures/receipts/grocery-receipt.json --json
 ```
 
 ## 🏗️ Architecture Overview

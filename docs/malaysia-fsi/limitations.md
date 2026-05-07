@@ -5,6 +5,7 @@
 - Maybank CSV parsing
 - Offline invoice matching
 - Offline reconciliation reporting
+- Offline JSON/manual receipt categorization and monthly summary reporting
 
 ## Not Implemented
 
@@ -15,6 +16,8 @@
 - CTOS integration
 - Bursa integration
 - Live bank APIs
+- OCR receipt ingestion
+- PDF/image receipt parsing
 
 ## Decision Boundaries
 

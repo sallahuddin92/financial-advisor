@@ -18,11 +18,13 @@ def run_step(name: str, cmd: list[str]) -> None:
 
 def main() -> int:
     run_step(
-        "Parser/Matcher Tests",
+        "Core Tests",
         [
             sys.executable,
             "-m",
             "pytest",
+            "tests/test_receipt_categorizer.py",
+            "tests/test_monthly_summary.py",
             "tests/test_bank_statement_parser.py",
             "tests/test_invoice_matcher.py",
             "-v",
@@ -54,6 +56,32 @@ def main() -> int:
             "md",
             "--output",
             "/tmp/reconciliation-report-verify.md",
+        ],
+    )
+    run_step(
+        "Receipt Categorize Smoke",
+        [
+            sys.executable,
+            "-m",
+            "malaysia_fsi.receipts.cli",
+            "categorize",
+            "test-fixtures/receipts",
+            "--json",
+            "--quiet",
+        ],
+    )
+    run_step(
+        "Receipt Summary Smoke",
+        [
+            sys.executable,
+            "-m",
+            "malaysia_fsi.receipts.cli",
+            "summarize",
+            "test-fixtures/receipts",
+            "--format",
+            "md",
+            "--output",
+            "/tmp/monthly-receipts-verify.md",
         ],
     )
     run_step(

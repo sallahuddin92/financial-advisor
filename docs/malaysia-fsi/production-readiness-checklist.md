@@ -20,3 +20,4 @@
 - Maybank CSV is currently the only real implemented bank format.
 - Other banks are disabled placeholders pending anonymized fixtures.
 - No government or external API integrations are included.
+- Institutional finance plugin lanes are placeholders only in current scope.

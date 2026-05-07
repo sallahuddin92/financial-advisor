@@ -16,7 +16,6 @@
 - [x] Rule-based receipt category mapping and duplicate candidate detection
 
 ### Next Small Tasks 🔄
-- [ ] Build monthly expense summary reports (JSON/CSV/Markdown)
 - [x] Build monthly expense summary reports (JSON/CSV/Markdown)
 - [x] Add receipt CLI (`categorize`, `summarize`, `validate`)
 - [x] Add unmatched transaction category hints in reconciliation reports (advisory only)
@@ -24,6 +23,7 @@
 - [ ] Add deterministic snapshot tests for Markdown and CSV reports
 - [ ] Add changelog/release-note template for offline MVP releases
 - [ ] Add tighter CLI operator runbook for strict-mode usage
+- [ ] Add receipt OCR/PDF parsing only after policy and quality guardrail approval
 
 ## Explicitly Out of Scope (Current)
 
@@ -32,6 +32,7 @@
 - [ ] CTOS/Bursa/bank API integrations
 - [ ] Automated compliance determinations
 - [ ] Regulatory/tax/accounting decision automation
+- [ ] Institutional finance functionality (only placeholder directories exist)
 
 ## Important Notes
 
