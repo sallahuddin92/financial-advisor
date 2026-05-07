@@ -233,6 +233,50 @@ class TestBankStatementParser:
         assert proc.returncode == 0, proc.stderr
         assert "\"bank_name\": \"Maybank\"" in proc.stdout
 
+    def test_new_cli_parse_json_subcommand(self):
+        """Test new module CLI parse subcommand returns machine-readable JSON."""
+        sample_file = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+
+        if not sample_file.exists():
+            pytest.skip("Sample file not found")
+
+        proc = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "malaysia_fsi.bank_statement.cli",
+                "parse",
+                str(sample_file),
+                "--json",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        assert proc.returncode == 0, proc.stderr
+        assert "\"bank_name\": \"Maybank\"" in proc.stdout
+
+    def test_new_cli_parse_missing_file_has_clear_stderr(self):
+        """Test parse user error emits stderr and non-zero exit without traceback."""
+        proc = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "malaysia_fsi.bank_statement.cli",
+                "parse",
+                "does-not-exist.csv",
+                "--json",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        assert proc.returncode != 0
+        assert "CSV file not found" in proc.stderr
+        assert "Traceback" not in proc.stderr
+
     def test_file_not_found(self):
         """Test error handling for missing file"""
         parser = BankStatementParser()

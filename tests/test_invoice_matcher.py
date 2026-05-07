@@ -544,6 +544,64 @@ class TestInvoiceMatcher:
         assert payload["human_review_required"] is True
         assert any(item["code"] == "HUMAN_REVIEW_REQUIRED" for item in payload["warnings"])
 
+    def test_new_cli_match_subcommand_json_output(self):
+        """Test new module CLI match subcommand JSON payload."""
+        sample_statement = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+        sample_invoice = Path("test-fixtures/sample-data/sample-invoice.json")
+
+        if not sample_statement.exists() or not sample_invoice.exists():
+            pytest.skip("Required sample fixtures not found")
+
+        proc = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "malaysia_fsi.bank_statement.cli",
+                "match",
+                str(sample_statement),
+                str(sample_invoice),
+                "--json",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        assert proc.returncode == 0, proc.stderr
+        payload = json.loads(proc.stdout)
+        assert payload["statement_bank"] == "Maybank"
+        assert payload["human_review_required"] is True
+
+    def test_new_cli_validate_subcommand_json_output(self):
+        """Test validate subcommand produces machine-readable JSON."""
+        sample_statement = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+        sample_invoice = Path("test-fixtures/sample-data/sample-invoice.json")
+
+        if not sample_statement.exists() or not sample_invoice.exists():
+            pytest.skip("Required sample fixtures not found")
+
+        proc = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "malaysia_fsi.bank_statement.cli",
+                "validate",
+                "--input",
+                str(sample_statement),
+                "--invoice",
+                str(sample_invoice),
+                "--json",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        assert proc.returncode == 0, proc.stderr
+        payload = json.loads(proc.stdout)
+        assert "valid" in payload
+        assert payload["human_review_required"] is True
+
     def test_invalid_invoice_json_produces_structured_warning(self):
         """Test invalid invoice JSON creates coded warning."""
         matcher = InvoiceMatcher()
