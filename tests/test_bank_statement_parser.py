@@ -24,7 +24,7 @@ class TestMaybankCSVParser:
 
     def test_parse_sample_data(self):
         """Test parsing the sample Maybank CSV file"""
-        sample_file = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+        sample_file = Path("test-fixtures/sample-data/maybank-valid.csv")
 
         if not sample_file.exists():
             pytest.skip("Sample file not found")
@@ -97,7 +97,7 @@ class TestMaybankCSVParser:
 
     def test_parse_malformed_csv_produces_warnings(self):
         """Test malformed Maybank CSV rows produce explicit warnings"""
-        malformed_file = Path("test-fixtures/sample-data/sample-maybank-statement-malformed.csv")
+        malformed_file = Path("test-fixtures/sample-data/maybank-malformed.csv")
 
         if not malformed_file.exists():
             pytest.skip("Malformed sample file not found")
@@ -164,7 +164,7 @@ class TestBankStatementParser:
 
     def test_parse_file_with_bank_hint(self):
         """Test parsing with explicit bank hint"""
-        sample_file = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+        sample_file = Path("test-fixtures/sample-data/maybank-valid.csv")
 
         if not sample_file.exists():
             pytest.skip("Sample file not found")
@@ -177,7 +177,7 @@ class TestBankStatementParser:
 
     def test_parse_file_without_bank_hint(self):
         """Test parsing without bank hint (auto-detection)"""
-        sample_file = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+        sample_file = Path("test-fixtures/sample-data/maybank-valid.csv")
 
         if not sample_file.exists():
             pytest.skip("Sample file not found")
@@ -203,7 +203,7 @@ class TestBankStatementParser:
 
     def test_disabled_bank_parsers_raise_not_implemented(self):
         """Test placeholders raise clear disabled message for unimplemented banks"""
-        sample_file = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+        sample_file = Path("test-fixtures/sample-data/maybank-valid.csv")
 
         if not sample_file.exists():
             pytest.skip("Sample file not found")
@@ -215,7 +215,7 @@ class TestBankStatementParser:
 
     def test_legacy_plugin_parser_cli_still_works(self):
         """Test legacy plugin CLI path remains callable."""
-        sample_file = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+        sample_file = Path("test-fixtures/sample-data/maybank-valid.csv")
         cli_path = Path(
             "plugins/vertical-plugins/malaysia-compliance/skills/bank-statement-parser/cli.py"
         )
@@ -235,7 +235,7 @@ class TestBankStatementParser:
 
     def test_new_cli_parse_json_subcommand(self):
         """Test new module CLI parse subcommand returns machine-readable JSON."""
-        sample_file = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
+        sample_file = Path("test-fixtures/sample-data/maybank-valid.csv")
 
         if not sample_file.exists():
             pytest.skip("Sample file not found")

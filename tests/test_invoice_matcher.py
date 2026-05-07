@@ -15,7 +15,7 @@ from malaysia_fsi.bank_statement.report import (
 )
 from malaysia_fsi.bank_statement.schema import BankStatement, Transaction, TransactionDirection
 
-EDGE_FIXTURES = Path("test-fixtures/sample-data/invoice-edge-cases")
+EDGE_FIXTURES = Path("test-fixtures/sample-data/invoices-edge-cases")
 
 
 def warning_codes(warnings):
@@ -517,8 +517,8 @@ class TestInvoiceMatcher:
 
     def test_match_cli_json_flag_outputs_reconciliation_json(self):
         """Test legacy match CLI path outputs reconciliation JSON summary."""
-        sample_statement = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
-        sample_invoice = Path("test-fixtures/sample-data/sample-invoice.json")
+        sample_statement = Path("test-fixtures/sample-data/maybank-valid.csv")
+        sample_invoice = Path("test-fixtures/sample-data/invoices-exact-match/invoice-abc-001.json")
         match_cli_path = Path(
             "plugins/vertical-plugins/malaysia-compliance/skills/bank-statement-parser/match_cli.py"
         )
@@ -551,8 +551,8 @@ class TestInvoiceMatcher:
 
     def test_new_cli_match_subcommand_json_output(self):
         """Test new module CLI match subcommand JSON payload."""
-        sample_statement = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
-        sample_invoice = Path("test-fixtures/sample-data/sample-invoice.json")
+        sample_statement = Path("test-fixtures/sample-data/maybank-valid.csv")
+        sample_invoice = Path("test-fixtures/sample-data/invoices-exact-match/invoice-abc-001.json")
 
         if not sample_statement.exists() or not sample_invoice.exists():
             pytest.skip("Required sample fixtures not found")
@@ -579,8 +579,8 @@ class TestInvoiceMatcher:
 
     def test_new_cli_validate_subcommand_json_output(self):
         """Test validate subcommand produces machine-readable JSON."""
-        sample_statement = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
-        sample_invoice = Path("test-fixtures/sample-data/sample-invoice.json")
+        sample_statement = Path("test-fixtures/sample-data/maybank-valid.csv")
+        sample_invoice = Path("test-fixtures/sample-data/invoices-exact-match/invoice-abc-001.json")
 
         if not sample_statement.exists() or not sample_invoice.exists():
             pytest.skip("Required sample fixtures not found")
@@ -622,17 +622,13 @@ class TestInvoiceMatcher:
                 )
             ],
         )
-        invalid_invoice_path = Path("test-fixtures/sample-data/invoice-edge-cases/invalid.json")
-        invalid_invoice_path.write_text("{invalid-json")
-        try:
-            results = matcher.match_statement_to_invoices(statement, [invalid_invoice_path])
-            assert any(
-                item["code"] == "INVALID_INVOICE_JSON"
-                for result in results
-                for item in result.warnings
-            )
-        finally:
-            invalid_invoice_path.unlink(missing_ok=True)
+        invalid_invoice_path = Path("test-fixtures/sample-data/invoices-invalid/invalid-json.json")
+        results = matcher.match_statement_to_invoices(statement, [invalid_invoice_path])
+        assert any(
+            item["code"] == "INVALID_INVOICE_JSON"
+            for result in results
+            for item in result.warnings
+        )
 
     def test_missing_invoice_fields_warning_codes(self):
         """Test missing invoice fields return structured warnings with message."""
@@ -699,8 +695,8 @@ class TestInvoiceMatcher:
 
     def test_new_cli_match_csv_and_markdown_output_files(self):
         """Test CLI match writes CSV and Markdown output files."""
-        sample_statement = Path("test-fixtures/sample-data/sample-maybank-statement.csv")
-        sample_invoice = Path("test-fixtures/sample-data/sample-invoice.json")
+        sample_statement = Path("test-fixtures/sample-data/maybank-valid.csv")
+        sample_invoice = Path("test-fixtures/sample-data/invoices-exact-match/invoice-abc-001.json")
 
         if not sample_statement.exists() or not sample_invoice.exists():
             pytest.skip("Required sample fixtures not found")

@@ -1,0 +1,8 @@
+{
+  "invoice_number": "INV-NAME-001",
+  "date": "2024-03-08",
+  "supplier": {},
+  "customer": {},
+  "grand_total": 750.0,
+  "items": []
+}

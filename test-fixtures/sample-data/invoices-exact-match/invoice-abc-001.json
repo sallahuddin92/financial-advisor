@@ -1,0 +1,15 @@
+{
+  "invoice_number": "INV-ABC-001",
+  "date": "2024-01-15",
+  "supplier": {
+    "name": "Sample Office Supplies Sdn Bhd"
+  },
+  "customer": {
+    "name": "Demo Trading Sdn Bhd"
+  },
+  "items": [
+    {"description": "Office supplies"}
+  ],
+  "grand_total": 1000.00,
+  "currency": "MYR"
+}

@@ -1,0 +1,8 @@
+{
+  "invoice_number": "INV-DUP-002",
+  "date": "2024-03-01",
+  "supplier": {"name": "ABC Supplies"},
+  "customer": {"name": "XYZ Trading"},
+  "grand_total": 1000.0,
+  "items": [{"description": "Office supplies"}]
+}

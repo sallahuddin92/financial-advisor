@@ -1,0 +1,11 @@
+Date,Description,Debit,Credit,Balance
+2024-01-02,Salary Credit,,15000.00,15000.00
+2024-01-05,Payment to ABC Supplier,2500.00,,12500.00
+2024-01-08,Office Rent,3500.00,,9000.00
+2024-01-12,Client Payment - XYZ Corp,,8000.00,17000.00
+2024-01-15,Utility Bills,450.00,,16550.00
+2024-01-18,Invoice Payment - DEF Services,1200.00,,15350.00
+2024-01-22,Client Payment - GHI Trading,,5500.00,20850.00
+2024-01-25,Equipment Purchase,2800.00,,18050.00
+2024-01-28,Bank Charges,25.00,,18025.00
+2024-01-30,Invoice Payment - JKL Marketing,950.00,,17075.00

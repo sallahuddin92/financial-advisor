@@ -1,0 +1,15 @@
+{
+  "invoice_number": "INV-RENT-001",
+  "date": "2024-01-20",
+  "supplier": {
+    "name": "Sample Property Management Sdn Bhd"
+  },
+  "customer": {
+    "name": "Demo Trading Sdn Bhd"
+  },
+  "items": [
+    {"description": "Office rental"}
+  ],
+  "grand_total": 2000.00,
+  "currency": "MYR"
+}
