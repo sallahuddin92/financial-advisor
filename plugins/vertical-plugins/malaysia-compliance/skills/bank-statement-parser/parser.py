@@ -98,16 +98,39 @@ class MaybankCSVParser:
                             continue
 
                         # Parse amounts
-                        debit = self.normalize_amount(row.get('Debit', ''))
-                        credit = self.normalize_amount(row.get('Credit', ''))
-                        balance = self.normalize_amount(row.get('Balance', ''))
+                        raw_debit = (row.get('Debit', '') or '').strip()
+                        raw_credit = (row.get('Credit', '') or '').strip()
+                        raw_balance = (row.get('Balance', '') or '').strip()
+
+                        debit = self.normalize_amount(raw_debit)
+                        credit = self.normalize_amount(raw_credit)
+                        balance = self.normalize_amount(raw_balance)
+
+                        if raw_debit and debit is None:
+                            warnings.append(f"Row {row_num}: Non-numeric debit '{raw_debit}'")
+                        if raw_credit and credit is None:
+                            warnings.append(f"Row {row_num}: Non-numeric credit '{raw_credit}'")
+                        if raw_balance and balance is None:
+                            warnings.append(f"Row {row_num}: Non-numeric balance '{raw_balance}'")
+
+                        has_debit = debit is not None and debit > 0
+                        has_credit = credit is not None and credit > 0
+
+                        if has_debit and has_credit:
+                            warnings.append(f"Row {row_num}: Both debit and credit are populated; treating row as debit")
+                            credit = None
+                            has_credit = False
+
+                        if not has_debit and not has_credit:
+                            warnings.append(f"Row {row_num}: Missing amount (both debit and credit are empty or invalid)")
+                            continue
 
                         # Create transaction
                         transaction = Transaction(
                             date=date_obj,
                             description=row.get('Description', '').strip(),
-                            debit=debit if debit and debit > 0 else None,
-                            credit=credit if credit and credit > 0 else None,
+                            debit=debit if has_debit else None,
+                            credit=credit if has_credit else None,
                             balance=balance,
                             currency="MYR",
                             source_bank=self.bank_name,

@@ -1,0 +1,8 @@
+{
+  "invoice_number": "INV-DATE-001",
+  "date": "2024-01-01",
+  "supplier": {"name": "Date Sensitive Supplier"},
+  "customer": {"name": "Date Sensitive Customer"},
+  "grand_total": 500.0,
+  "items": [{"description": "Annual subscription"}]
+}

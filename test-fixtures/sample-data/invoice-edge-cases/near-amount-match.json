@@ -1,0 +1,8 @@
+{
+  "invoice_number": "INV-NEAR-001",
+  "date": "2024-03-05",
+  "supplier": {"name": "Near Amount Supplier"},
+  "customer": {"name": "Near Amount Customer"},
+  "grand_total": 1000.0,
+  "items": [{"description": "Monthly service fee"}]
+}

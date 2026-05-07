@@ -219,6 +219,8 @@ class InvoiceMatcher:
         # Add warnings
         if amount_difference_percent > 0.05:  # More than 5% difference
             result.warnings.append(f"Amount difference: {amount_difference_percent:.1%}")
+        elif amount_difference_percent > self.amount_tolerance:
+            result.warnings.append(f"Near amount match: {amount_difference_percent:.1%} difference")
         if date_score < 0.5:
             result.warnings.append("Date mismatch beyond tolerance")
         if keyword_score < 0.3:
@@ -243,14 +245,20 @@ class InvoiceMatcher:
         for transaction in statement.transactions:
             best_match = None
             best_score = 0.0
+            second_best_score = 0.0
 
             for invoice in loaded_invoices:
                 match_result = self.match_transaction_to_invoice(transaction, invoice)
                 if match_result.confidence > best_score:
+                    second_best_score = best_score
                     best_match = match_result
                     best_score = match_result.confidence
+                elif match_result.confidence > second_best_score:
+                    second_best_score = match_result.confidence
 
             if best_match:
+                if best_score >= 0.5 and (best_score - second_best_score) <= 0.02:
+                    best_match.warnings.append("Multiple candidate invoices with similar confidence; manual review required")
                 results.append(best_match)
             else:
                 # No match found

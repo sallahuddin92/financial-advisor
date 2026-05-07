@@ -108,6 +108,22 @@ class TestMaybankCSVParser:
             result = parser.normalize_amount(amount_str)
             assert result == expected, f"Failed to normalize {amount_str}"
 
+    def test_parse_malformed_csv_produces_warnings(self):
+        """Test malformed Maybank CSV rows produce explicit warnings"""
+        malformed_file = Path("test-fixtures/sample-data/sample-maybank-statement-malformed.csv")
+
+        if not malformed_file.exists():
+            pytest.skip("Malformed sample file not found")
+
+        parser = MaybankCSVParser()
+        statement = parser.parse_csv(malformed_file)
+
+        assert len(statement.transactions) == 2
+        assert any("Missing amount" in warning for warning in statement.warnings)
+        assert any("Could not parse date" in warning for warning in statement.warnings)
+        assert any("Both debit and credit are populated" in warning for warning in statement.warnings)
+        assert any("Non-numeric balance" in warning for warning in statement.warnings)
+
 class TestBankStatementParser:
     """Test main parser interface"""
 

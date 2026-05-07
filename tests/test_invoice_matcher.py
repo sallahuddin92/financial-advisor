@@ -10,6 +10,8 @@ from datetime import date
 from pathlib import Path
 import pytest
 
+EDGE_FIXTURES = Path("test-fixtures/sample-data/invoice-edge-cases")
+
 # Load modules using file path to avoid hyphen import issues
 base_path = Path(__file__).parent.parent
 schema_path = base_path / "plugins" / "vertical-plugins" / "malaysia-compliance" / "skills" / "bank-statement-parser" / "schema.py"
@@ -365,3 +367,99 @@ class TestInvoiceMatcher:
         assert report["average_confidence"] == 0.55
         assert len(report["details"]) == 2
         assert "No matching invoice found" in report["warnings"]
+
+    def test_duplicate_candidates_produce_ambiguity_warning(self):
+        """Test warning when multiple invoices are similarly strong candidates"""
+        matcher = InvoiceMatcher()
+
+        transaction = Transaction(
+            date=date(2024, 3, 1),
+            description="Payment to ABC Supplies for office supplies",
+            credit=1000.00,
+            source_bank="Maybank"
+        )
+        statement = BankStatement(
+            bank_name="Maybank",
+            transactions=[transaction],
+            statement_period_start=date(2024, 3, 1),
+            statement_period_end=date(2024, 3, 1)
+        )
+
+        invoice_paths = [
+            EDGE_FIXTURES / "duplicate-candidate-1.json",
+            EDGE_FIXTURES / "duplicate-candidate-2.json",
+        ]
+
+        if not all(path.exists() for path in invoice_paths):
+            pytest.skip("Duplicate candidate fixtures not found")
+
+        results = matcher.match_statement_to_invoices(statement, invoice_paths)
+
+        assert len(results) == 1
+        assert any(
+            "Multiple candidate invoices with similar confidence" in warning
+            for warning in results[0].warnings
+        )
+
+    def test_near_amount_difference_produces_warning(self):
+        """Test warning for near amount matches that exceed strict tolerance"""
+        matcher = InvoiceMatcher()
+        invoice_path = EDGE_FIXTURES / "near-amount-match.json"
+
+        if not invoice_path.exists():
+            pytest.skip("Near amount fixture not found")
+
+        invoice = matcher.load_invoice(invoice_path)
+
+        transaction = Transaction(
+            date=date(2024, 3, 5),
+            description="Payment to Near Amount Supplier for monthly service fee",
+            credit=1030.00,  # 3% above invoice total
+            source_bank="Maybank"
+        )
+
+        result = matcher.match_transaction_to_invoice(transaction, invoice)
+
+        assert any("Near amount match" in warning for warning in result.warnings)
+
+    def test_date_outside_tolerance_produces_warning(self):
+        """Test warning when invoice date is far outside matching tolerance"""
+        matcher = InvoiceMatcher()
+        invoice_path = EDGE_FIXTURES / "date-outside-tolerance.json"
+
+        if not invoice_path.exists():
+            pytest.skip("Date outside tolerance fixture not found")
+
+        invoice = matcher.load_invoice(invoice_path)
+
+        transaction = Transaction(
+            date=date(2024, 3, 20),
+            description="Annual subscription payment",
+            credit=500.00,
+            source_bank="Maybank"
+        )
+
+        result = matcher.match_transaction_to_invoice(transaction, invoice)
+
+        assert any("Date mismatch beyond tolerance" in warning for warning in result.warnings)
+
+    def test_missing_supplier_and_customer_name_produces_warning(self):
+        """Test warning when invoice has insufficient party-name context"""
+        matcher = InvoiceMatcher()
+        invoice_path = EDGE_FIXTURES / "missing-supplier-customer-name.json"
+
+        if not invoice_path.exists():
+            pytest.skip("Missing names fixture not found")
+
+        invoice = matcher.load_invoice(invoice_path)
+
+        transaction = Transaction(
+            date=date(2024, 3, 8),
+            description="Payment for services",
+            credit=750.00,
+            source_bank="Maybank"
+        )
+
+        result = matcher.match_transaction_to_invoice(transaction, invoice)
+
+        assert any("Low keyword similarity" in warning for warning in result.warnings)
