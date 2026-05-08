@@ -112,6 +112,30 @@ python3 -m malaysia_fsi.web_demo.app
 - Supports output format choice: `Markdown` / `JSON` / `CSV`
 - Keeps **HUMAN REVIEW REQUIRED** disclaimers in generated outputs
 
+### How to Demo
+
+1. Start local demo UI:
+   - `make web-demo`
+2. Open local browser URL shown in terminal (default: `http://127.0.0.1:7860`).
+3. Provide inputs using upload or local fixture paths:
+   - Maybank CSV
+   - invoice JSON file/folder
+   - receipt JSON file/folder
+4. Select output format (`Markdown`, `JSON`, or `CSV`) and run.
+5. Download and review generated reports:
+   - reconciliation output
+   - monthly expense summary
+   - `categorized-expenses.csv`
+   - `warnings-summary.md`
+   - `index.md`
+6. Use guidance docs for demos and pilots:
+   - `docs/malaysia-fsi/demo-script.md`
+   - `docs/malaysia-fsi/pilot-checklist.md`
+   - `docs/malaysia-fsi/accountant-feedback-form.md`
+   - `docs/malaysia-fsi/sme-feedback-form.md`
+
+**HUMAN REVIEW REQUIRED** for every output before financial, accounting, tax, or compliance decisions.
+
 ## 🏗️ Architecture Overview
 
 ```
