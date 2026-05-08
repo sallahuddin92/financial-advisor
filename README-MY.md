@@ -110,6 +110,9 @@ python3 -m malaysia_fsi.web_demo.app
 - Uses Gradio if available, otherwise FastAPI + simple HTML
 - Supports Maybank CSV + invoice JSON + receipt JSON inputs
 - Supports output format choice: `Markdown` / `JSON` / `CSV`
+- Includes one-click sample action: **Run sample kedai makan demo**
+- Renders report previews in browser (reconciliation, monthly summary, warnings)
+- Stores each run in timestamped folders under `demo-output/`
 - Keeps **HUMAN REVIEW REQUIRED** disclaimers in generated outputs
 
 ### How to Demo
@@ -122,17 +125,19 @@ python3 -m malaysia_fsi.web_demo.app
    - invoice JSON file/folder
    - receipt JSON file/folder
 4. Select output format (`Markdown`, `JSON`, or `CSV`) and run.
-5. Download and review generated reports:
+5. Optional: click **Run sample kedai makan demo** to execute the built-in fixture flow.
+6. Download and review generated reports:
    - reconciliation output
    - monthly expense summary
    - `categorized-expenses.csv`
    - `warnings-summary.md`
    - `index.md`
-6. Use guidance docs for demos and pilots:
+7. Use guidance docs for demos and pilots:
    - `docs/malaysia-fsi/demo-script.md`
    - `docs/malaysia-fsi/pilot-checklist.md`
    - `docs/malaysia-fsi/accountant-feedback-form.md`
    - `docs/malaysia-fsi/sme-feedback-form.md`
+   - `docs/malaysia-fsi/demo-troubleshooting.md`
 
 **HUMAN REVIEW REQUIRED** for every output before financial, accounting, tax, or compliance decisions.
 

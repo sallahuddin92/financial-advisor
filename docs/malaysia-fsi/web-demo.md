@@ -13,11 +13,26 @@ This is local-only tooling. It does not add external APIs, authentication, SaaS 
 ## Start
 
 ```bash
+make web-demo
+```
+
+Equivalent command:
+
+```bash
 python3 -m malaysia_fsi.web_demo.app
 ```
 
 If `gradio` is installed, the app runs with Gradio.
 Otherwise it falls back to FastAPI + simple HTML form (default local URL: `http://127.0.0.1:7860`).
+
+## UX Improvements Included
+
+- clearer landing page with required files and limitations
+- dedicated sample button: **Run sample kedai makan demo**
+- separate warnings section for easier review
+- explicit report download links
+- in-browser report previews for Markdown outputs
+- timestamped output folders under `demo-output/`
 
 ## Inputs
 
@@ -33,12 +48,32 @@ Supported inputs:
 
 ## Outputs
 
-The web demo runs reconciliation + receipt summary and generates downloadable reports:
-- reconciliation (`.md` / `.json` / `.csv` by selected format)
-- monthly expense summary (`.md` / `.json` / `.csv` by selected format)
+The web demo runs reconciliation + receipt summary and generates downloadable reports.
+
+Standard outputs:
+- reconciliation report (`.md` / `.json` / `.csv` based on selected format)
+- monthly expense summary (`.md` / `.json` / `.csv` based on selected format)
 - `categorized-expenses.csv`
 - `warnings-summary.md`
 - `index.md`
+
+Sample button output is aligned with the CLI demo flow and includes:
+- `reconciliation.md`
+- `reconciliation.json`
+- `monthly-expense-summary.md`
+- `categorized-expenses.csv`
+- `warnings-summary.md`
+- `index.md`
+
+## Error Messages
+
+The web demo now provides explicit errors for:
+- missing bank CSV
+- unsupported bank format
+- invalid invoice JSON
+- invalid receipt JSON
+- empty folder uploads
+- unsupported file type
 
 ## Safety
 
@@ -47,3 +82,5 @@ The web demo runs reconciliation + receipt summary and generates downloadable re
 - No database
 - No external APIs
 - **HUMAN REVIEW REQUIRED** for every output
+
+See troubleshooting notes at `docs/malaysia-fsi/demo-troubleshooting.md`.

@@ -23,6 +23,7 @@ build/
 out/
 target/
 *.log
+demo-output/
 
 # Environment and secrets
 .env
